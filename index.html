@@ -124,14 +124,15 @@
       </div>
       <div class="input-group">
         <label class="input-label">Passwort</label>
-        <div style="position:relative;">
+        <div style="position:relative;" id="pw-wrapper">
           <input class="input-field" type="password" id="login-pw" placeholder="••••••••" autocomplete="current-password" style="padding-right:48px;">
-          <button onclick="togglePwVisibility()" id="pw-eye-btn" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:var(--gray-400);display:flex;align-items:center;justify-content:center;">
+          <button onclick="togglePwVisibility()" id="pw-eye-btn" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:var(--gray-400);display:flex;align-items:center;justify-content:center;z-index:2;">
             <svg id="pw-eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
               <circle cx="12" cy="12" r="3"/>
             </svg>
           </button>
+          <div id="pw-blur-overlay" style="position:absolute;inset:0;border-radius:var(--radius-md);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity 0.2s ease;background:rgba(255,255,255,0.15);"></div>
         </div>
         <div class="error-msg" id="login-error">E-Mail oder Passwort nicht korrekt.</div>
       </div>
@@ -456,17 +457,17 @@ async function doLogin() {
 document.getElementById('login-pw').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 
 function togglePwVisibility() {
-  const input = document.getElementById('login-pw');
-  const icon  = document.getElementById('pw-eye-icon');
-  const show  = input.type === 'password';
+  const input   = document.getElementById('login-pw');
+  const icon    = document.getElementById('pw-eye-icon');
+  const overlay = document.getElementById('pw-blur-overlay');
+  const show    = input.type === 'password';
 
-  // Blur transition
-  input.style.transition = 'filter 0.25s ease';
-  input.style.filter = 'blur(4px)';
+  // Fade in overlay (blur effect — works in Edge, Chrome, Firefox)
+  overlay.style.opacity = '1';
 
   setTimeout(() => {
     input.type = show ? 'text' : 'password';
-    input.style.filter = 'blur(0px)';
+    overlay.style.opacity = '0';
   }, 200);
 
   icon.innerHTML = show
