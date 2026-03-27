@@ -315,17 +315,38 @@
   <!-- PROFIL -->
   <div class="screen" id="screen-profil">
     <div class="nav">
-      <button class="nav-back" onclick="goTo('dashboard')">←</button>
+      <button class="nav-back" onclick="goTo('dashboard')">&#8592;</button>
       <span style="font-weight:500;">Mein Profil</span>
       <div style="width:36px"></div>
     </div>
     <div class="screen-body">
       <div class="section-label">Meine Daten</div>
       <div class="card">
-        <div class="status-row"><span style="color:var(--gray-600)">Name</span><span id="profil-name" style="font-weight:500"></span></div>
-        <div class="status-row"><span style="color:var(--gray-600)">E-Mail</span><span id="profil-email" style="font-size:14px;color:var(--gray-600)"></span></div>
-        <div class="status-row" style="border:none"><span style="color:var(--gray-600)">Adresse</span><span id="profil-address" style="font-size:14px;color:var(--gray-600);text-align:right;max-width:200px"></span></div>
+        <div class="input-group">
+          <label class="input-label">Vorname <span style="color:var(--red-400)">*</span></label>
+          <input class="input-field" type="text" id="profil-vorname" placeholder="z.B. Max" autocomplete="given-name">
+          <div class="error-msg" id="err-vorname">Bitte Vornamen eingeben.</div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Nachname <span style="color:var(--red-400)">*</span></label>
+          <input class="input-field" type="text" id="profil-nachname" placeholder="z.B. Mustermann" autocomplete="family-name">
+          <div class="error-msg" id="err-nachname">Bitte Nachnamen eingeben.</div>
+        </div>
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Lieferadresse <span style="color:var(--red-400)">*</span></label>
+          <textarea class="input-field" id="profil-adresse" placeholder="Strasse und Hausnummer&#10;PLZ Ort" rows="3" autocomplete="street-address" style="resize:none;line-height:1.6;"></textarea>
+          <div class="error-msg" id="err-adresse">Bitte Lieferadresse eingeben.</div>
+        </div>
       </div>
+      <div class="card" style="padding:12px 16px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="var(--gray-400)" stroke-width="1.2"/><path d="M8 7v4M8 5.5v.5" stroke="var(--gray-400)" stroke-width="1.2" stroke-linecap="round"/></svg>
+          <span style="font-size:13px;color:var(--gray-400);">E-Mail: <span id="profil-email" style="color:var(--gray-600)"></span></span>
+        </div>
+      </div>
+      <button class="btn-primary" id="profil-save-btn" onclick="saveProfilData()" style="margin-bottom:12px;">Daten speichern</button>
+      <div id="profil-save-success" style="display:none;text-align:center;font-size:14px;color:var(--teal-600);font-weight:500;padding:8px 0;">&#10003; Daten erfolgreich gespeichert</div>
+
       <div class="section-label">Abo-Verwaltung</div>
       <div class="card">
         <div class="toggle-row" style="border:none">
@@ -336,10 +357,10 @@
           <button class="toggle-switch" id="profil-abo-toggle" onclick="toggleProfilAbo()"><div class="toggle-knob"></div></button>
         </div>
       </div>
-      <div class="notice" id="profil-abo-notice" style="display:none;">Änderung gilt ab dem nächsten Monat.</div>
+      <div class="notice" id="profil-abo-notice" style="display:none;">Anderung gilt ab dem nachsten Monat.</div>
       <div class="section-label">Passwort</div>
       <div class="card">
-        <button class="btn-secondary" onclick="doPasswordReset()">Passwort ändern</button>
+        <button class="btn-secondary" onclick="doPasswordReset()">Passwort andern</button>
       </div>
       <div class="logout-link" onclick="doLogout()">Abmelden</div>
     </div>
@@ -523,9 +544,13 @@ async function loadDashboard() {
   document.getElementById('dash-greeting').textContent = greeting + ', ' + name.split(' ')[0] + '!';
   document.getElementById('dash-month').textContent = 'Ihre Pflegebox für ' + nowMonth();
   document.getElementById('nav-avatar').textContent = getInitials(name);
-  document.getElementById('profil-name').textContent  = name;
   document.getElementById('profil-email').textContent = state.user.email;
-  document.getElementById('profil-address').innerHTML = (c?.adresse||'—').replace('\n','<br>');
+  // Fill profil form fields
+  const vorname  = c?.vorname  || '';
+  const nachname = c?.nachname || '';
+  document.getElementById('profil-vorname').value  = vorname;
+  document.getElementById('profil-nachname').value = nachname;
+  document.getElementById('profil-adresse').value  = c?.adresse || '';
 
   const badge = document.getElementById('dash-abo-badge');
   const bar   = document.getElementById('dash-bar');
@@ -782,6 +807,66 @@ async function loadHistory() {
       <div style="font-size:14px;color:var(--gray-600);padding-top:8px;line-height:1.7">${items}</div>`;
     list.appendChild(card);
   });
+}
+
+// ── SAVE PROFIL DATA ──────────────────────────
+async function saveProfilData() {
+  const vorname  = document.getElementById('profil-vorname').value.trim();
+  const nachname = document.getElementById('profil-nachname').value.trim();
+  const adresse  = document.getElementById('profil-adresse').value.trim();
+
+  // Validation
+  let hasError = false;
+  const errVn = document.getElementById('err-vorname');
+  const errNn = document.getElementById('err-nachname');
+  const errAd = document.getElementById('err-adresse');
+
+  errVn.classList.toggle('show', !vorname);
+  errNn.classList.toggle('show', !nachname);
+  errAd.classList.toggle('show', !adresse);
+
+  if (!vorname || !nachname || !adresse) return;
+
+  const btn = document.getElementById('profil-save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Wird gespeichert...';
+
+  const fullName = vorname + ' ' + nachname;
+
+  const { error } = await sb.from('customers').upsert({
+    id: state.user.id,
+    vorname,
+    nachname,
+    name: fullName,
+    adresse,
+    abo_aktiv: state.aboActive
+  });
+
+  btn.disabled = false;
+  btn.textContent = 'Daten speichern';
+
+  if (error) {
+    alert('Fehler beim Speichern. Bitte versuchen Sie es erneut.');
+    return;
+  }
+
+  // Update local state
+  if (!state.customer) state.customer = {};
+  state.customer.vorname  = vorname;
+  state.customer.nachname = nachname;
+  state.customer.name     = fullName;
+  state.customer.adresse  = adresse;
+
+  // Show success message
+  const success = document.getElementById('profil-save-success');
+  success.style.display = 'block';
+  setTimeout(() => { success.style.display = 'none'; }, 3000);
+
+  // Refresh dashboard greeting & avatar
+  document.getElementById('nav-avatar').textContent = getInitials(fullName);
+  document.getElementById('dash-greeting').textContent =
+    (new Date().getHours() < 12 ? 'Guten Morgen' : new Date().getHours() < 18 ? 'Guten Tag' : 'Guten Abend')
+    + ', ' + vorname + '!';
 }
 
 // ── PROFIL ABO TOGGLE ──────────────────────────
