@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>24Pflegebox — Meine Pflegebox</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --teal-50:#E1F5EE;--teal-100:#9FE1CB;--teal-400:#1D9E75;--teal-600:#0F6E56;--teal-800:#085041;
+    --amber-50:#FAEEDA;--amber-600:#854F0B;
+    --gray-50:#F8F7F4;--gray-100:#EFEFEB;--gray-200:#DDDDD8;--gray-400:#9B9B96;--gray-600:#5F5E5A;--gray-800:#2C2C2A;
+    --red-50:#FCEBEB;--red-400:#E24B4A;
+    --white:#FFFFFF;
+    --font:'DM Sans',sans-serif;--font-serif:'DM Serif Display',serif;
+    --radius-sm:8px;--radius-md:12px;--radius-lg:16px;
+    --shadow-sm:0 1px 3px rgba(0,0,0,0.08);--shadow-md:0 4px 16px rgba(0,0,0,0.1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{font-family:var(--font);background:var(--gray-50);color:var(--gray-800);min-height:100vh;font-size:16px;line-height:1.5;}
+  .app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--white);position:relative;overflow-x:hidden;}
+  .screen{display:none;min-height:100vh;flex-direction:column;}
+  .screen.active{display:flex;animation:fadeIn 0.25s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--white);border-bottom:1px solid var(--gray-100);position:sticky;top:0;z-index:10;}
+  .nav-logo{font-family:var(--font-serif);font-size:20px;color:var(--teal-600);}
+  .nav-back{width:36px;height:36px;border-radius:50%;background:var(--gray-50);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--gray-600);}
+  .nav-avatar{width:36px;height:36px;border-radius:50%;background:var(--teal-50);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--teal-800);cursor:pointer;}
+  .screen-body{flex:1;overflow-y:auto;padding:24px 20px 100px;}
+  .btn-primary{width:100%;padding:16px 20px;font-size:16px;font-weight:500;background:var(--teal-400);color:var(--white);border:none;border-radius:var(--radius-md);cursor:pointer;font-family:var(--font);transition:background 0.15s,transform 0.1s;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .btn-primary:hover{background:var(--teal-600);}
+  .btn-primary:active{transform:scale(0.98);}
+  .btn-primary:disabled{background:var(--gray-200);color:var(--gray-400);cursor:default;}
+  .btn-secondary{width:100%;padding:15px 20px;font-size:15px;font-weight:500;background:transparent;color:var(--teal-400);border:1.5px solid var(--teal-400);border-radius:var(--radius-md);cursor:pointer;font-family:var(--font);transition:background 0.15s;}
+  .btn-secondary:hover{background:var(--teal-50);}
+  .input-group{margin-bottom:16px;}
+  .input-label{font-size:14px;font-weight:500;color:var(--gray-600);margin-bottom:6px;display:block;}
+  .input-field{width:100%;padding:14px 16px;font-size:16px;font-family:var(--font);border:1.5px solid var(--gray-200);border-radius:var(--radius-md);background:var(--white);color:var(--gray-800);outline:none;transition:border-color 0.15s;}
+  .input-field:focus{border-color:var(--teal-400);}
+  .card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray-100);padding:20px;margin-bottom:16px;box-shadow:var(--shadow-sm);}
+  .card-teal{background:var(--teal-50);border-color:var(--teal-100);}
+  .card-amber{background:var(--amber-50);border-color:#FAC775;}
+  .badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:0.02em;}
+  .badge-teal{background:var(--teal-50);color:var(--teal-800);}
+  .badge-teal-solid{background:var(--teal-400);color:var(--white);}
+  .badge-amber{background:var(--amber-50);color:var(--amber-600);}
+  .badge-gray{background:var(--gray-100);color:var(--gray-600);}
+  .bar-track{height:12px;background:var(--gray-100);border-radius:6px;overflow:hidden;}
+  .bar-fill{height:12px;border-radius:6px;background:var(--teal-400);transition:width 0.3s ease,background 0.3s ease;}
+  .bar-labels{display:flex;justify-content:space-between;margin-top:5px;}
+  .bar-label-text{font-size:11px;color:var(--gray-400);}
+  .product-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1.5px solid var(--gray-100);border-radius:var(--radius-md);margin-bottom:10px;transition:border-color 0.15s,background 0.15s;gap:10px;}
+  .product-img{width:56px;height:56px;border-radius:var(--radius-sm);object-fit:cover;flex-shrink:0;background:var(--gray-100);}
+  .product-item.selected{border-color:var(--teal-400);background:var(--teal-50);}
+  .product-name{font-size:15px;font-weight:500;}
+  .product-detail{font-size:13px;color:var(--gray-400);margin-top:2px;}
+  .qty-ctrl{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+  .qty-btn{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--gray-200);background:var(--white);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray-800);font-family:var(--font);transition:border-color 0.15s,background 0.15s;}
+  .qty-btn:hover:not(:disabled){border-color:var(--teal-400);background:var(--teal-50);}
+  .qty-btn:disabled{opacity:0.25;cursor:default;}
+  .qty-num{font-size:16px;font-weight:600;min-width:20px;text-align:center;}
+  .mode-toggle{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);overflow:hidden;margin-bottom:20px;}
+  .mode-btn{padding:12px 8px;font-size:14px;font-weight:500;background:transparent;border:none;cursor:pointer;color:var(--gray-400);transition:all 0.15s;font-family:var(--font);}
+  .mode-btn:first-child{border-right:1.5px solid var(--gray-200);}
+  .mode-btn.active{background:var(--teal-400);color:var(--white);}
+  .sticky-bar{position:sticky;bottom:0;background:var(--white);border-top:1px solid var(--gray-100);padding:16px 20px;box-shadow:0 -4px 20px rgba(0,0,0,0.06);}
+  .divider{height:1px;background:var(--gray-100);margin:20px 0;}
+  .status-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--gray-100);font-size:15px;}
+  .status-row:last-child{border-bottom:none;}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--gray-100);}
+  .toggle-info{flex:1;padding-right:16px;}
+  .toggle-title{font-size:15px;font-weight:500;}
+  .toggle-sub{font-size:13px;color:var(--gray-400);margin-top:2px;}
+  .toggle-switch{width:48px;height:28px;background:var(--gray-200);border-radius:14px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none;}
+  .toggle-switch.on{background:var(--teal-400);}
+  .toggle-knob{width:22px;height:22px;background:var(--white);border-radius:50%;position:absolute;top:3px;left:3px;transition:transform 0.2s;box-shadow:var(--shadow-sm);}
+  .toggle-switch.on .toggle-knob{transform:translateX(20px);}
+  .rec-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1.5px solid var(--teal-100);border-radius:var(--radius-md);background:var(--teal-50);margin-bottom:10px;}
+  .rec-count{width:32px;height:32px;border-radius:50%;background:var(--teal-400);color:var(--white);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0;}
+  .summary-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gray-100);font-size:15px;}
+  .summary-row:last-child{border-bottom:none;}
+  .confirm-icon{width:72px;height:72px;border-radius:50%;background:var(--teal-50);border:3px solid var(--teal-400);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
+  .login-header{padding:48px 20px 32px;text-align:center;}
+  .login-logo{font-family:var(--font-serif);font-size:32px;color:var(--teal-600);margin-bottom:8px;}
+  .login-sub{font-size:15px;color:var(--gray-400);line-height:1.6;}
+  .greeting{font-size:22px;font-weight:600;margin-bottom:4px;}
+  .greeting-sub{font-size:15px;color:var(--gray-400);}
+  .error-msg{font-size:13px;color:var(--red-400);margin-top:8px;display:none;}
+  .error-msg.show{display:block;}
+  .text-link{color:var(--teal-400);text-decoration:none;font-size:14px;font-weight:500;cursor:pointer;}
+  .text-link:hover{text-decoration:underline;}
+  .notice{background:var(--amber-50);border:1px solid #FAC775;border-radius:var(--radius-md);padding:12px 16px;font-size:14px;color:var(--amber-600);line-height:1.6;margin-bottom:16px;}
+  .notice-teal{background:var(--teal-50);border:1px solid var(--teal-100);color:var(--teal-800);}
+  .section-label{font-size:11px;font-weight:600;letter-spacing:0.08em;color:var(--gray-400);text-transform:uppercase;margin-bottom:12px;margin-top:24px;}
+  .section-label:first-child{margin-top:0;}
+  .logout-link{text-align:center;padding:20px;font-size:14px;color:var(--gray-400);cursor:pointer;}
+  .logout-link:hover{color:var(--red-400);}
+  .spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;z-index:100;flex-direction:column;gap:12px;}
+  .loading-overlay.hidden{display:none;}
+  .loading-text{font-size:14px;color:var(--gray-600);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Loading overlay -->
+  <div class="loading-overlay hidden" id="loading-overlay">
+    <div style="width:36px;height:36px;border:3px solid var(--teal-100);border-top-color:var(--teal-400);border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+    <div class="loading-text" id="loading-text">Wird geladen...</div>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="screen active" id="screen-login">
+    <div class="login-header">
+      <div class="login-logo">24Pflegebox</div>
+      <p class="login-sub">Ihr persönlicher Zugang zu<br>kostenlosen Pflegehilfsmitteln</p>
+    </div>
+    <div class="screen-body" style="padding-top:0;">
+      <div class="input-group">
+        <label class="input-label">E-Mail-Adresse</label>
+        <input class="input-field" type="email" id="login-email" placeholder="ihre@email.de" autocomplete="email">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Passwort</label>
+        <div style="position:relative;" id="pw-wrapper">
+          <input class="input-field" type="password" id="login-pw" placeholder="••••••••" autocomplete="current-password" style="padding-right:48px;">
+          <button onclick="togglePwVisibility()" id="pw-eye-btn" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:var(--gray-400);display:flex;align-items:center;justify-content:center;z-index:2;">
+            <svg id="pw-eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+          <div id="pw-blur-overlay" style="position:absolute;inset:0;border-radius:var(--radius-md);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity 0.2s ease;background:rgba(255,255,255,0.15);"></div>
+        </div>
+        <div class="error-msg" id="login-error">E-Mail oder Passwort nicht korrekt.</div>
+      </div>
+      <div style="text-align:right;margin-bottom:24px;">
+        <span class="text-link" onclick="goTo('forgot')">Passwort vergessen?</span>
+      </div>
+      <button class="btn-primary" id="login-btn" onclick="doLogin()">Anmelden</button>
+      <p style="text-align:center;margin-top:20px;font-size:13px;color:var(--gray-400);">
+        Noch kein Konto? Bitte kontaktieren Sie uns unter<br>
+        <a href="mailto:info@24pflegebox.de" class="text-link">info@24pflegebox.de</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- PASSWORT VERGESSEN -->
+  <div class="screen" id="screen-forgot">
+    <div class="nav">
+      <button class="nav-back" onclick="goTo('login')">←</button>
+      <span style="font-weight:500;">Passwort zurücksetzen</span>
+      <div style="width:36px"></div>
+    </div>
+    <div class="screen-body">
+      <p style="font-size:15px;color:var(--gray-600);line-height:1.7;margin-bottom:24px;">Geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Link zum Zurücksetzen Ihres Passworts.</p>
+      <div class="input-group">
+        <label class="input-label">E-Mail-Adresse</label>
+        <input class="input-field" type="email" id="forgot-email" placeholder="ihre@email.de">
+      </div>
+      <button class="btn-primary" onclick="doForgot()">Link senden</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="screen" id="screen-dashboard">
+    <div class="nav">
+      <div class="nav-logo">24Pflegebox</div>
+      <div class="nav-avatar" id="nav-avatar" onclick="goTo('profil')">?</div>
+    </div>
+    <div class="screen-body">
+      <div style="margin-bottom:24px;">
+        <div class="greeting" id="dash-greeting">Guten Tag!</div>
+        <div class="greeting-sub" id="dash-month"></div>
+      </div>
+      <div class="card card-teal" style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-size:14px;font-weight:500;color:var(--teal-800);">Guthaben diesen Monat</span>
+          <span class="badge badge-teal-solid" id="dash-abo-badge">Abo aktiv</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill" id="dash-bar" style="width:0%;"></div></div>
+        <div class="bar-labels">
+          <span class="bar-label-text" id="dash-bar-left">leer</span>
+          <span class="bar-label-text">voll</span>
+        </div>
+      </div>
+      <button class="btn-primary" style="margin-bottom:10px;" onclick="startKonfigurator()">Box zusammenstellen</button>
+      <button class="btn-secondary" onclick="goTo('bestellhistorie')">Frühere Bestellungen ansehen</button>
+      <div class="section-label" style="margin-top:28px;">Letzte Bestellung</div>
+      <div class="card" id="dash-last-order">
+        <div class="status-row"><span style="color:var(--gray-600);">Monat</span><span id="last-order-month" style="font-weight:500;">—</span></div>
+        <div class="status-row"><span style="color:var(--gray-600);">Status</span><span class="badge badge-teal" id="last-order-status">—</span></div>
+        <div class="status-row"><span style="color:var(--gray-600);">Produkte</span><span id="last-order-items" style="font-weight:500;text-align:right;max-width:200px;font-size:13px;color:var(--gray-600);">—</span></div>
+      </div>
+      <div class="logout-link" onclick="doLogout()">Abmelden</div>
+    </div>
+  </div>
+
+  <!-- KONFIGURATOR -->
+  <div class="screen" id="screen-konfigurator">
+    <div class="nav">
+      <button class="nav-back" onclick="goTo('dashboard')">←</button>
+      <span style="font-weight:500;">Meine Pflegebox</span>
+      <div style="width:36px"></div>
+    </div>
+    <div style="padding:12px 20px 10px;border-bottom:1px solid var(--gray-100);background:var(--white);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:14px;font-weight:500;">Ihre Pflegebox</span>
+        <span id="konfig-bar-label" style="font-size:14px;font-weight:500;color:var(--teal-400);">Fügen Sie Produkte hinzu</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" id="konfig-bar" style="width:0%;"></div></div>
+      <div class="bar-labels"><span class="bar-label-text">leer</span><span class="bar-label-text">voll</span></div>
+    </div>
+    <div class="screen-body" style="padding-top:20px;">
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="mode-btn-emp" onclick="setMode('empfehlung')">Unsere Empfehlung</button>
+        <button class="mode-btn" id="mode-btn-ind" onclick="setMode('individuell')">Selbst zusammenstellen</button>
+      </div>
+      <div id="mode-empfehlung">
+        <div class="notice notice-teal">Unsere Empfehlung ist bereits vollständig zusammengestellt und auf Ihren monatlichen Bedarf abgestimmt.</div>
+        <div class="section-label">Enthaltene Produkte</div>
+        <div class="rec-item">
+          <div><div style="font-size:15px;font-weight:500;color:var(--teal-600);">Flächendesinfektionstücher</div><div style="font-size:13px;color:var(--teal-400);margin-top:2px;">100 Stk. · 2 Packungen</div></div>
+          <div class="rec-count">2</div>
+        </div>
+        <div class="rec-item">
+          <div><div style="font-size:15px;font-weight:500;color:var(--teal-600);">Einmalhandschuhe</div><div style="font-size:13px;color:var(--teal-400);margin-top:2px;">100 Stk. · 1 Packung</div></div>
+          <div class="rec-count">1</div>
+        </div>
+        <div style="padding:14px 0;font-size:14px;color:var(--gray-400);">3 Packungen · Versand kostenlos</div>
+      </div>
+      <div id="mode-individuell" style="display:none;">
+        <div id="product-list"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Als monatliche Abo-Box speichern</div>
+          <div class="toggle-sub">Diese Zusammenstellung wiederholt sich automatisch jeden Monat</div>
+        </div>
+        <button class="toggle-switch on" id="abo-toggle" onclick="toggleAbo()"><div class="toggle-knob"></div></button>
+      </div>
+    </div>
+    <div class="sticky-bar">
+      <button class="btn-primary" id="konfig-weiter-btn" onclick="goToSummary()">Weiter zur Übersicht →</button>
+    </div>
+  </div>
+
+  <!-- ZUSAMMENFASSUNG -->
+  <div class="screen" id="screen-summary">
+    <div class="nav">
+      <button class="nav-back" onclick="goTo('konfigurator')">←</button>
+      <span style="font-weight:500;">Bestellübersicht</span>
+      <div style="width:36px"></div>
+    </div>
+    <div class="screen-body">
+      <div class="section-label">Ihre gewählten Produkte</div>
+      <div class="card" id="summary-products"></div>
+      <div class="section-label">Lieferadresse</div>
+      <div class="card">
+        <div id="summary-address" style="font-size:15px;line-height:1.8;color:var(--gray-600);"></div>
+        <div class="divider" style="margin:12px 0;"></div>
+        <span class="badge badge-teal">Versand kostenlos</span>
+      </div>
+      <div class="section-label">Abo-Einstellung</div>
+      <div class="card" id="summary-abo-card">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span id="summary-abo-icon" style="font-size:20px;">✓</span>
+          <div>
+            <div style="font-size:15px;font-weight:500;" id="summary-abo-title">Monatliches Abo aktiv</div>
+            <div style="font-size:13px;color:var(--gray-400);margin-top:2px;" id="summary-abo-sub">Diese Box wird automatisch jeden Monat wiederholt</div>
+          </div>
+        </div>
+      </div>
+      <div class="notice" id="summary-change-notice" style="display:none;">Diese Änderung gilt erst ab dem nächsten Monat. Ihre aktuelle Bestellung bleibt unverändert.</div>
+    </div>
+    <div class="sticky-bar">
+      <button class="btn-primary" onclick="doOrder()">Jetzt verbindlich bestellen</button>
+      <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--gray-400);">Sie erhalten eine Bestätigungsmail nach der Bestellung</div>
+    </div>
+  </div>
+
+  <!-- BESTÄTIGUNG -->
+  <div class="screen" id="screen-confirmation">
+    <div class="nav"><div class="nav-logo">24Pflegebox</div><div style="width:36px"></div></div>
+    <div class="screen-body" style="display:flex;flex-direction:column;align-items:center;padding-top:48px;text-align:center;">
+      <div class="confirm-icon">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M8 18l7 7 13-13" stroke="#1D9E75" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h2 style="font-family:var(--font-serif);font-size:26px;color:var(--teal-600);margin-bottom:12px;">Bestellung eingegangen!</h2>
+      <p style="font-size:15px;color:var(--gray-600);line-height:1.7;margin-bottom:32px;max-width:320px;">Vielen Dank! Wir haben Ihre Pflegebox erhalten. Eine Bestätigungsmail ist unterwegs.</p>
+      <div class="card" style="width:100%;text-align:left;margin-bottom:16px;">
+        <div style="font-size:12px;font-weight:600;letter-spacing:0.06em;color:var(--gray-400);text-transform:uppercase;margin-bottom:12px;">Bestellte Produkte</div>
+        <div id="confirm-products"></div>
+      </div>
+      <div class="card card-teal" style="width:100%;text-align:left;" id="confirm-abo-info">
+        <div style="font-size:14px;color:var(--teal-800);line-height:1.7;" id="confirm-abo-text"></div>
+      </div>
+      <button class="btn-primary" style="margin-top:32px;" onclick="goTo('dashboard')">Zurück zum Dashboard</button>
+    </div>
+  </div>
+
+  <!-- BESTELLHISTORIE -->
+  <div class="screen" id="screen-bestellhistorie">
+    <div class="nav">
+      <button class="nav-back" onclick="goTo('dashboard')">←</button>
+      <span style="font-weight:500;">Frühere Bestellungen</span>
+      <div style="width:36px"></div>
+    </div>
+    <div class="screen-body"><div id="history-list"></div></div>
+  </div>
+
+  <!-- PROFIL -->
+  <div class="screen" id="screen-profil">
+    <div class="nav">
+      <button class="nav-back" onclick="goTo('dashboard')">&#8592;</button>
+      <span style="font-weight:500;">Mein Profil</span>
+      <div style="width:36px"></div>
+    </div>
+    <div class="screen-body">
+
+      <!-- Tab Toggle -->
+      <div class="mode-toggle" style="margin-bottom:20px;">
+        <button class="mode-btn active" id="ptab-btn-liefer" onclick="switchProfilTab('liefer')">Lieferinformationen</button>
+        <button class="mode-btn" id="ptab-btn-versich" onclick="switchProfilTab('versich')">Versicherungsdaten</button>
+      </div>
+
+      <!-- TAB: LIEFERINFORMATIONEN -->
+      <div id="ptab-liefer">
+        <div style="font-size:12px;color:var(--gray-400);margin-bottom:16px;">Felder mit <span style="color:var(--red-400)">*</span> sind Pflichtfelder</div>
+
+        <div class="input-group">
+          <label class="input-label">Pflegegrad <span style="color:var(--red-400)">*</span></label>
+          <select class="input-field" id="p-pflegegrad">
+            <option value="">Bitte wählen</option>
+            <option value="1">Pflegegrad 1</option>
+            <option value="2">Pflegegrad 2</option>
+            <option value="3">Pflegegrad 3</option>
+            <option value="4">Pflegegrad 4</option>
+            <option value="5">Pflegegrad 5</option>
+          </select>
+          <div class="error-msg" id="err-pflegegrad">Bitte Pflegegrad auswählen.</div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">Anrede <span style="color:var(--red-400)">*</span></label>
+          <select class="input-field" id="p-anrede">
+            <option value="">Bitte wählen</option>
+            <option value="Frau">Frau</option>
+            <option value="Herr">Herr</option>
+            <option value="Divers">Divers</option>
+          </select>
+          <div class="error-msg" id="err-anrede">Bitte Anrede auswählen.</div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">Vorname <span style="color:var(--red-400)">*</span></label>
+          <input class="input-field" type="text" id="profil-vorname" placeholder="z.B. Max" autocomplete="given-name">
+          <div class="error-msg" id="err-vorname">Bitte Vornamen eingeben.</div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">Nachname <span style="color:var(--red-400)">*</span></label>
+          <input class="input-field" type="text" id="profil-nachname" placeholder="z.B. Mustermann" autocomplete="family-name">
+          <div class="error-msg" id="err-nachname">Bitte Nachnamen eingeben.</div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">Geburtsdatum <span style="color:var(--red-400)">*</span></label>
+          <input class="input-field" type="date" id="p-geburtsdatum">
+          <div class="error-msg" id="err-geburtsdatum">Bitte Geburtsdatum eingeben.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr auto;gap:10px;">
+          <div class="input-group">
+            <label class="input-label">Stra&#223;e <span style="color:var(--red-400)">*</span></label>
+            <input class="input-field" type="text" id="p-strasse" placeholder="Musterstra&#223;e" autocomplete="address-line1">
+            <div class="error-msg" id="err-strasse">Pflichtfeld.</div>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Nr. <span style="color:var(--red-400)">*</span></label>
+            <input class="input-field" type="text" id="p-hausnummer" placeholder="1a" style="width:72px;">
+            <div class="error-msg" id="err-hausnummer">Pflicht.</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:10px;">
+          <div class="input-group">
+            <label class="input-label">PLZ <span style="color:var(--red-400)">*</span></label>
+            <input class="input-field" type="text" id="p-plz" placeholder="20095" maxlength="5" style="width:90px;" autocomplete="postal-code">
+            <div class="error-msg" id="err-plz">Pflicht.</div>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Stadt <span style="color:var(--red-400)">*</span></label>
+            <input class="input-field" type="text" id="p-stadt" placeholder="Hamburg" autocomplete="address-level2">
+            <div class="error-msg" id="err-stadt">Pflichtfeld.</div>
+          </div>
+        </div>
+
+        <!-- Abweichende Lieferadresse -->
+        <div class="card" style="padding:14px 16px;margin-bottom:16px;">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;font-weight:500;">
+            <input type="checkbox" id="p-abw-check" onchange="toggleAbwAdresse()" style="width:18px;height:18px;accent-color:var(--teal-400);cursor:pointer;">
+            Abweichende Lieferadresse
+          </label>
+          <div id="p-abw-fields" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--gray-100);">
+            <div style="display:grid;grid-template-columns:1fr auto;gap:10px;">
+              <div class="input-group">
+                <label class="input-label">Stra&#223;e</label>
+                <input class="input-field" type="text" id="p-abw-strasse" placeholder="Lieferstra&#223;e">
+              </div>
+              <div class="input-group">
+                <label class="input-label">Nr.</label>
+                <input class="input-field" type="text" id="p-abw-hausnummer" placeholder="1" style="width:72px;">
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:10px;">
+              <div class="input-group" style="margin-bottom:0">
+                <label class="input-label">PLZ</label>
+                <input class="input-field" type="text" id="p-abw-plz" placeholder="20095" maxlength="5" style="width:90px;">
+              </div>
+              <div class="input-group" style="margin-bottom:0">
+                <label class="input-label">Stadt</label>
+                <input class="input-field" type="text" id="p-abw-stadt" placeholder="Hamburg">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="profil-save-btn" onclick="saveProfilData()">Lieferdaten speichern</button>
+        <div id="profil-save-success" style="display:none;text-align:center;font-size:14px;color:var(--teal-600);font-weight:500;padding:10px 0;">&#10003; Daten erfolgreich gespeichert</div>
+      </div>
+
+      <!-- TAB: VERSICHERUNGSDATEN -->
+      <div id="ptab-versich" style="display:none;">
+        <div style="font-size:12px;color:var(--gray-400);margin-bottom:16px;">Felder mit <span style="color:var(--red-400)">*</span> sind Pflichtfelder</div>
+
+        <div class="input-group">
+          <label class="input-label">Versicherungsart <span style="color:var(--red-400)">*</span></label>
+          <select class="input-field" id="p-versart">
+            <option value="">Bitte wählen</option>
+            <option value="Gesetzlich">Gesetzlich versichert</option>
+            <option value="Privat">Privat versichert</option>
+          </select>
+          <div class="error-msg" id="err-versart">Bitte Versicherungsart wählen.</div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">Versicherungsnummer <span style="color:var(--red-400)">*</span></label>
+          <input class="input-field" type="text" id="p-versnr" placeholder="z.B. A123456789">
+          <div class="error-msg" id="err-versnr">Bitte Versicherungsnummer eingeben.</div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">Telefonnummer <span style="color:var(--red-400)">*</span></label>
+          <input class="input-field" type="tel" id="p-telefon" placeholder="z.B. 040 123456" autocomplete="tel">
+          <div class="error-msg" id="err-telefon">Bitte Telefonnummer eingeben.</div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">E-Mail <span style="font-size:12px;color:var(--gray-400);font-weight:400;">(optional)</span></label>
+          <input class="input-field" type="email" id="p-email-opt" placeholder="ihre@email.de" autocomplete="email">
+        </div>
+
+        <!-- Versorgungsart -->
+        <div class="card" style="padding:16px;margin-bottom:16px;">
+          <div style="font-size:14px;font-weight:500;margin-bottom:12px;">Versorgungsart <span style="color:var(--red-400)">*</span></div>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;margin-bottom:10px;">
+            <input type="radio" name="versorgung" id="p-erstversorgung" value="Erstversorgung" checked style="width:18px;height:18px;accent-color:var(--teal-400);">
+            Erstversorgung
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;">
+            <input type="radio" name="versorgung" id="p-wechselversorgung" value="Wechselversorgung" style="width:18px;height:18px;accent-color:var(--teal-400);">
+            Wechselversorgung
+          </label>
+        </div>
+
+        <div class="card" style="padding:12px 16px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="var(--gray-400)" stroke-width="1.2"/><path d="M8 7v4M8 5.5v.5" stroke="var(--gray-400)" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span style="font-size:13px;color:var(--gray-400);">Login-E-Mail: <span id="profil-email" style="color:var(--gray-600)"></span></span>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="versich-save-btn" onclick="saveVersichData()">Versicherungsdaten speichern</button>
+        <div id="versich-save-success" style="display:none;text-align:center;font-size:14px;color:var(--teal-600);font-weight:500;padding:10px 0;">&#10003; Daten erfolgreich gespeichert</div>
+      </div>
+
+      <!-- ABO + PASSWORT (immer sichtbar) -->
+      <div class="section-label" style="margin-top:28px;">Abo-Verwaltung</div>
+      <div class="card">
+        <div class="toggle-row" style="border:none">
+          <div class="toggle-info">
+            <div class="toggle-title">Monatliches Abo</div>
+            <div class="toggle-sub" id="profil-abo-sub">Ihre Box wird automatisch jeden Monat bestellt</div>
+          </div>
+          <button class="toggle-switch" id="profil-abo-toggle" onclick="toggleProfilAbo()"><div class="toggle-knob"></div></button>
+        </div>
+      </div>
+      <div class="notice" id="profil-abo-notice" style="display:none;">&#196;nderung gilt ab dem n&#228;chsten Monat.</div>
+
+      <div class="section-label">Passwort</div>
+      <div class="card">
+        <button class="btn-secondary" onclick="doPasswordReset()">Passwort &#228;ndern</button>
+      </div>
+      <div class="logout-link" onclick="doLogout()">Abmelden</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── SUPABASE INIT ──────────────────────────────
+const SUPABASE_URL = 'https://swxeigfhiljpjfihgzwu.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3eGVpZ2ZoaWxqcGpmaWhnend1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MzA4MTAsImV4cCI6MjA5MDEwNjgxMH0.-F-BIiBhHH6aWrngl_c068LnADGIFmsl8CMjFovX1fg';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── PRODUCTS & CONSTANTS ───────────────────────
+const BUDGET = 42;
+const MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+const IMG = 'https://swxeigfhiljpjfihgzwu.supabase.co/storage/v1/object/public/produkte/';
+const PRODUCTS = [
+  {id:'handschuhe',   name:'Einmalhandschuhe',                   detail:'100 Stk.',  price:9.00,   img:IMG+'einmalhandschuhe.png'},
+  {id:'bettschutz',   name:'Einwegbettschutz',                   detail:'',          price:0,      img:IMG+'Einwegbettschutz.png'},
+  {id:'haende-fl',    name:'H\u00e4ndedesinfektion fl\u00fcssig', detail:'500 ml',  price:6.95,   img:IMG+'haende-desinfektion.png'},
+  {id:'flaechen-fl',  name:'Fl\u00e4chendesinfektion fl\u00fcssig', detail:'500 ml', price:5.65,  img:IMG+'flaechen-desinfektion.png'},
+  {id:'haende-tu',    name:'H\u00e4ndedesinfektions-T\u00fccher', detail:'150 Stk.', price:12.00, img:IMG+'haende-desinfektionstuecher.png'},
+  {id:'flaechen-tu',  name:'Fl\u00e4chendesinfektions-T\u00fccher', detail:'150 Stk.', price:16.00, img:IMG+'flaechen-desinfektionstuecher.png'},
+  {id:'ffp2',         name:'FFP2 Masken',                        detail:'10 Stk.',   price:6.50,   img:IMG+'FFP2-Masken.png'},
+  {id:'masken',       name:'OP Mundschutzmasken',                detail:'50 Stk.',   price:6.00,   img:IMG+'op-masken.png'},
+  {id:'servietten',   name:'Schutzservietten',                   detail:'100 Stk.',  price:10.00,  img:IMG+'Schutzservietten.png'},
+  {id:'fingerlinge',  name:'Fingerlinge',                        detail:'100 Stk.',  price:5.00,   img:IMG+'Fingerlinge.png'}
+];
+
+const REC_BOX = [
+  {id:'flaechen-tu', qty:2},
+  {id:'handschuhe',  qty:1}
+];
+
+// ── APP STATE ──────────────────────────────────
+let state = {
+  user: null,
+  customer: null,
+  mode: 'empfehlung',
+  aboActive: true,
+  qtys: {}
+};
+
+// ── UTILS ──────────────────────────────────────
+function loading(show, text='Wird geladen...') {
+  document.getElementById('loading-overlay').classList.toggle('hidden', !show);
+  document.getElementById('loading-text').textContent = text;
+}
+
+function goTo(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + screen).classList.add('active');
+  window.scrollTo(0,0);
+  if (screen === 'bestellhistorie') loadHistory();
+  if (screen === 'dashboard') loadDashboard();
+}
+
+function getTotal() {
+  return PRODUCTS.reduce((s,p) => s + (state.qtys[p.id]||0) * p.price, 0);
+}
+
+function getCurrentBox() {
+  if (state.mode === 'empfehlung') {
+    return REC_BOX.map(r => ({ ...PRODUCTS.find(x=>x.id===r.id), qty: r.qty }));
+  }
+  return PRODUCTS.filter(p=>(state.qtys[p.id]||0)>0).map(p=>({...p,qty:state.qtys[p.id]}));
+}
+
+function boxToString(box) {
+  return box.map(i=>`${i.name} × ${i.qty}`).join(', ');
+}
+
+function getInitials(name) {
+  if (!name) return '?';
+  return name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+}
+
+function nowMonth() {
+  const n = new Date();
+  return MONTHS[n.getMonth()] + ' ' + n.getFullYear();
+}
+
+// ── AUTH ───────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value;
+  const err   = document.getElementById('login-error');
+  const btn   = document.getElementById('login-btn');
+
+  if (!email || !pw) { err.textContent='Bitte E-Mail und Passwort eingeben.'; err.classList.add('show'); return; }
+
+  btn.innerHTML = '<div class="spinner"></div>';
+  btn.disabled = true;
+  err.classList.remove('show');
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+
+  btn.innerHTML = 'Anmelden';
+  btn.disabled = false;
+
+  if (error) {
+    err.textContent = 'E-Mail oder Passwort nicht korrekt.';
+    err.classList.add('show');
+    return;
+  }
+
+  state.user = data.user;
+  await loadCustomer();
+  goTo('dashboard');
+}
+
+document.getElementById('login-pw').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+function togglePwVisibility() {
+  const input   = document.getElementById('login-pw');
+  const icon    = document.getElementById('pw-eye-icon');
+  const overlay = document.getElementById('pw-blur-overlay');
+  const show    = input.type === 'password';
+
+  // Fade in overlay (blur effect — works in Edge, Chrome, Firefox)
+  overlay.style.opacity = '1';
+
+  setTimeout(() => {
+    input.type = show ? 'text' : 'password';
+    overlay.style.opacity = '0';
+  }, 200);
+
+  icon.innerHTML = show
+    ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`
+    : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+}
+
+async function doForgot() {
+  const email = document.getElementById('forgot-email').value.trim();
+  if (!email) return;
+  loading(true, 'Link wird gesendet...');
+  await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+  loading(false);
+  alert('Ein Link zum Zurücksetzen Ihres Passworts wurde an ' + email + ' gesendet.');
+  goTo('login');
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  state.user = null;
+  state.customer = null;
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-pw').value = '';
+  goTo('login');
+}
+
+async function doPasswordReset() {
+  if (!state.user) return;
+  loading(true, 'Link wird gesendet...');
+  await sb.auth.resetPasswordForEmail(state.user.email, { redirectTo: window.location.origin });
+  loading(false);
+  alert('Ein Link zum Ändern Ihres Passworts wurde an ' + state.user.email + ' gesendet.');
+}
+
+// ── CUSTOMER DATA ──────────────────────────────
+async function loadCustomer() {
+  if (!state.user) return;
+  const { data } = await sb.from('customers').select('*').eq('id', state.user.id).single();
+  state.customer = data;
+  if (data) state.aboActive = data.abo_aktiv ?? true;
+}
+
+// ── DASHBOARD ──────────────────────────────────
+async function loadDashboard() {
+  if (!state.user) return;
+  await loadCustomer();
+
+  const c = state.customer;
+  const name = c?.name || state.user.email;
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Guten Morgen' : hour < 18 ? 'Guten Tag' : 'Guten Abend';
+
+  document.getElementById('dash-greeting').textContent = greeting + ', ' + name.split(' ')[0] + '!';
+  document.getElementById('dash-month').textContent = 'Ihre Pflegebox für ' + nowMonth();
+  document.getElementById('nav-avatar').textContent = getInitials(name);
+  document.getElementById('profil-email').textContent = state.user.email;
+  // Fill Lieferdaten fields
+  if (c) {
+    const setVal = (id, val) => { const el=document.getElementById(id); if(el && val) el.value=val; };
+    setVal('p-pflegegrad',  c.pflegegrad);
+    setVal('p-anrede',      c.anrede);
+    setVal('profil-vorname',c.vorname);
+    setVal('profil-nachname',c.nachname);
+    setVal('p-geburtsdatum',c.geburtsdatum);
+    setVal('p-strasse',     c.strasse);
+    setVal('p-hausnummer',  c.hausnummer);
+    setVal('p-plz',         c.plz);
+    setVal('p-stadt',       c.stadt);
+    if (c.abw_adresse) {
+      document.getElementById('p-abw-check').checked = true;
+      document.getElementById('p-abw-fields').style.display = 'block';
+    }
+    // Fill Versicherungsdaten fields
+    setVal('p-versart',    c.versicherungsart);
+    setVal('p-versnr',     c.versicherungsnummer);
+    setVal('p-telefon',    c.telefon);
+    setVal('p-email-opt',  c.email_optional);
+    if (c.versorgungsart === 'Wechselversorgung') {
+      document.getElementById('p-wechselversorgung').checked = true;
+    } else {
+      document.getElementById('p-erstversorgung').checked = true;
+    }
+  }
+  const vorname  = c?.vorname  || '';
+  const nachname = c?.nachname || '';
+
+  const badge = document.getElementById('dash-abo-badge');
+  const bar   = document.getElementById('dash-bar');
+  const barL  = document.getElementById('dash-bar-left');
+
+  if (state.aboActive) {
+    badge.textContent = 'Abo aktiv';
+    badge.className = 'badge badge-teal-solid';
+    bar.style.width = '100%';
+    bar.style.background = 'var(--teal-600)';
+    barL.textContent = 'Box vollständig';
+  } else {
+    badge.textContent = 'Kein Abo';
+    badge.className = 'badge badge-gray';
+    bar.style.width = '0%';
+    barL.textContent = 'leer';
+  }
+
+  const pt = document.getElementById('profil-abo-toggle');
+  pt.className = 'toggle-switch' + (state.aboActive ? ' on' : '');
+
+  // Last order
+  const { data: orders } = await sb.from('orders')
+    .select('*').eq('customer_id', state.user.id)
+    .order('created_at', {ascending: false}).limit(1);
+
+  if (orders && orders.length > 0) {
+    const o = orders[0];
+    const items = Array.isArray(o.produkte) ? boxToString(o.produkte) : '—';
+    document.getElementById('last-order-month').textContent  = o.monat || '—';
+    document.getElementById('last-order-status').textContent = o.status || '—';
+    document.getElementById('last-order-items').textContent  = items;
+  }
+}
+
+// ── KONFIGURATOR ───────────────────────────────
+function startKonfigurator() {
+  state.qtys = {};
+  PRODUCTS.forEach(p => state.qtys[p.id] = 0);
+  state.mode = 'empfehlung';
+  renderProductList();
+  syncModeUI();
+  syncAboToggle();
+  updateKonfigBar();
+  goTo('konfigurator');
+}
+
+function renderProductList() {
+  const c = document.getElementById('product-list');
+  c.innerHTML = '';
+  PRODUCTS.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'product-item';
+    div.id = 'prod-' + p.id;
+    div.innerHTML = `
+      <img class="product-img" src="${p.img}" alt="${p.name}"
+           onerror="this.style.background='var(--gray-100)';this.src='';">
+      <div style="flex:1;min-width:0">
+        <div class="product-name">${p.name}</div>
+        ${p.detail ? `<div class="product-detail">${p.detail}</div>` : ''}
+      </div>
+      <div class="qty-ctrl">
+        <button class="qty-btn" id="minus-${p.id}" onclick="changeQty('${p.id}',-1)">−</button>
+        <span class="qty-num" id="qty-${p.id}">0</span>
+        <button class="qty-btn" id="plus-${p.id}" onclick="changeQty('${p.id}',1)">+</button>
+      </div>`;
+    c.appendChild(div);
+  });
+  const btn = document.createElement('button');
+  btn.className = 'btn-primary';
+  btn.style.marginTop = '12px';
+  btn.textContent = 'Weiter zur Übersicht';
+  btn.onclick = goToSummary;
+  c.appendChild(btn);
+}
+
+function changeQty(id, delta) {
+  const cur = state.qtys[id]||0;
+  const p = PRODUCTS.find(x=>x.id===id);
+  const newQty = cur + delta;
+  if (newQty < 0) return;
+  if (getTotal() - cur*p.price + newQty*p.price > BUDGET) return;
+  state.qtys[id] = newQty;
+  updateProductItem(id);
+  updateKonfigBar();
+}
+
+function updateProductItem(id) {
+  const qty = state.qtys[id]||0;
+  const total = getTotal();
+  const p = PRODUCTS.find(x=>x.id===id);
+  const row = document.getElementById('prod-'+id);
+  if (!row) return;
+  document.getElementById('qty-'+id).textContent = qty;
+  row.className = 'product-item' + (qty>0?' selected':'');
+  const plus = document.getElementById('plus-'+id);
+  plus.disabled = total + p.price > BUDGET;
+}
+
+function updateKonfigBar() {
+  const total = state.mode==='empfehlung'
+    ? REC_BOX.reduce((s,r)=>{const p=PRODUCTS.find(x=>x.id===r.id);return s+r.qty*p.price;},0)
+    : getTotal();
+  const pct = total > 39 ? 100 : (total/BUDGET*100);
+  const isFull = total > 39;
+  const bar = document.getElementById('konfig-bar');
+  const lbl = document.getElementById('konfig-bar-label');
+  bar.style.width = pct+'%';
+  bar.style.background = isFull ? 'var(--teal-600)' : 'var(--teal-400)';
+  if (state.mode==='empfehlung'||isFull) { lbl.textContent='Box vollständig gefüllt'; lbl.style.color='var(--teal-600)'; }
+  else if (total===0) { lbl.textContent='Fügen Sie Produkte hinzu'; lbl.style.color='var(--teal-400)'; }
+  else { lbl.textContent='Noch etwas Platz'; lbl.style.color='var(--teal-400)'; }
+  document.getElementById('konfig-weiter-btn').disabled =
+    state.mode==='individuell' && PRODUCTS.every(p=>(state.qtys[p.id]||0)===0);
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  syncModeUI();
+  updateKonfigBar();
+  if (mode==='individuell') PRODUCTS.forEach(p=>updateProductItem(p.id));
+}
+
+function syncModeUI() {
+  const isEmp = state.mode==='empfehlung';
+  document.getElementById('mode-btn-emp').className = 'mode-btn'+(isEmp?' active':'');
+  document.getElementById('mode-btn-ind').className = 'mode-btn'+(!isEmp?' active':'');
+  document.getElementById('mode-empfehlung').style.display = isEmp?'block':'none';
+  document.getElementById('mode-individuell').style.display = !isEmp?'block':'none';
+}
+
+function toggleAbo() {
+  state.aboActive = !state.aboActive;
+  syncAboToggle();
+}
+
+function syncAboToggle() {
+  document.getElementById('abo-toggle').className = 'toggle-switch'+(state.aboActive?' on':'');
+}
+
+// ── SUMMARY ────────────────────────────────────
+function goToSummary() {
+  const box = getCurrentBox();
+  if (!box.length) return;
+
+  const pc = document.getElementById('summary-products');
+  pc.innerHTML = '';
+  box.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'summary-row';
+    row.innerHTML = `<span style="color:var(--gray-600)">${item.name} <span style="color:var(--gray-400)">${item.detail}</span></span><span style="font-weight:600">× ${item.qty}</span>`;
+    pc.appendChild(row);
+  });
+  const foot = document.createElement('div');
+  foot.style.cssText='display:flex;justify-content:space-between;padding:14px 0 0;font-size:15px;font-weight:600;color:var(--teal-600);border-top:1px solid var(--gray-100);margin-top:4px';
+  foot.innerHTML=`<span>${box.reduce((s,i)=>s+i.qty,0)} Packungen</span><span class="badge badge-teal">Versand kostenlos</span>`;
+  pc.appendChild(foot);
+
+  const c = state.customer;
+  document.getElementById('summary-address').innerHTML =
+    (c?.name||state.user?.email||'') + '<br>' + (c?.adresse||'').replace('\n','<br>');
+
+  const aboCard = document.getElementById('summary-abo-card');
+  if (state.aboActive) {
+    aboCard.className='card card-teal';
+    document.getElementById('summary-abo-title').textContent='Monatliches Abo aktiv';
+    document.getElementById('summary-abo-sub').textContent='Diese Box wird automatisch jeden Monat wiederholt';
+    document.getElementById('summary-abo-icon').textContent='✓';
+  } else {
+    aboCard.className='card';
+    document.getElementById('summary-abo-title').textContent='Einmalige Bestellung';
+    document.getElementById('summary-abo-sub').textContent='Kein Abo — nur diese Bestellung';
+    document.getElementById('summary-abo-icon').textContent='○';
+  }
+
+  const notice = document.getElementById('summary-change-notice');
+  notice.style.display = (state.customer?.abo_aktiv && state.mode!=='empfehlung') ? 'block' : 'none';
+
+  goTo('summary');
+}
+
+// ── ORDER ──────────────────────────────────────
+async function doOrder() {
+  const box = getCurrentBox();
+  if (!box.length || !state.user) return;
+
+  loading(true, 'Bestellung wird gespeichert...');
+
+  const month = nowMonth();
+  const orderData = {
+    customer_id: state.user.id,
+    monat: month,
+    produkte: box,
+    bestelltyp: state.aboActive ? 'abo' : 'manuell',
+    status: 'In Bearbeitung'
+  };
+
+  const { error: orderErr } = await sb.from('orders').insert(orderData);
+
+  // Update abo status in customer profile
+  await sb.from('customers').update({
+    abo_aktiv: state.aboActive,
+    abo_box: box
+  }).eq('id', state.user.id);
+
+  loading(false);
+
+  if (orderErr) {
+    alert('Fehler beim Speichern. Bitte versuchen Sie es erneut.');
+    return;
+  }
+
+  // Render confirmation
+  const cp = document.getElementById('confirm-products');
+  cp.innerHTML = '';
+  box.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'summary-row';
+    row.innerHTML=`<span style="color:var(--gray-600)">${item.name}</span><span style="font-weight:600">× ${item.qty}</span>`;
+    cp.appendChild(row);
+  });
+
+  const aboInfo = document.getElementById('confirm-abo-info');
+  const aboText = document.getElementById('confirm-abo-text');
+  if (state.aboActive) {
+    aboInfo.style.display='block';
+    aboText.textContent='Ihr Abo ist aktiv. Diese Box wird automatisch jeden Monat für Sie bestellt.';
+  } else {
+    aboInfo.style.display='none';
+  }
+
+  if (state.customer) state.customer.abo_aktiv = state.aboActive;
+  goTo('confirmation');
+}
+
+// ── HISTORY ────────────────────────────────────
+async function loadHistory() {
+  const list = document.getElementById('history-list');
+  list.innerHTML = '<p style="color:var(--gray-400);font-size:15px;text-align:center;padding:40px 0;">Wird geladen...</p>';
+  if (!state.user) return;
+
+  const { data: orders } = await sb.from('orders').select('*')
+    .eq('customer_id', state.user.id).order('created_at', {ascending:false});
+
+  list.innerHTML = '';
+  if (!orders || !orders.length) {
+    list.innerHTML='<p style="color:var(--gray-400);font-size:15px;text-align:center;padding:40px 0;">Noch keine Bestellungen vorhanden.</p>';
+    return;
+  }
+  orders.forEach(o => {
+    const items = Array.isArray(o.produkte) ? boxToString(o.produkte) : '—';
+    const card = document.createElement('div');
+    card.className='card';
+    card.innerHTML=`
+      <div class="status-row"><span style="font-weight:600;font-size:16px">${o.monat}</span><span class="badge badge-teal">${o.status}</span></div>
+      <div style="font-size:14px;color:var(--gray-600);padding-top:8px;line-height:1.7">${items}</div>`;
+    list.appendChild(card);
+  });
+}
+
+// ── PROFIL TAB SWITCH ─────────────────────────
+function switchProfilTab(tab) {
+  document.getElementById('ptab-liefer').style.display  = tab==='liefer'  ? 'block' : 'none';
+  document.getElementById('ptab-versich').style.display = tab==='versich' ? 'block' : 'none';
+  document.getElementById('ptab-btn-liefer').className  = 'mode-btn' + (tab==='liefer'  ? ' active' : '');
+  document.getElementById('ptab-btn-versich').className = 'mode-btn' + (tab==='versich' ? ' active' : '');
+}
+
+function toggleAbwAdresse() {
+  const checked = document.getElementById('p-abw-check').checked;
+  document.getElementById('p-abw-fields').style.display = checked ? 'block' : 'none';
+}
+
+// ── SAVE LIEFERDATEN ───────────────────────────
+async function saveProfilData() {
+  const pflegegrad  = document.getElementById('p-pflegegrad').value;
+  const anrede      = document.getElementById('p-anrede').value;
+  const vorname     = document.getElementById('profil-vorname').value.trim();
+  const nachname    = document.getElementById('profil-nachname').value.trim();
+  const geburtsdatum= document.getElementById('p-geburtsdatum').value;
+  const strasse     = document.getElementById('p-strasse').value.trim();
+  const hausnummer  = document.getElementById('p-hausnummer').value.trim();
+  const plz         = document.getElementById('p-plz').value.trim();
+  const stadt       = document.getElementById('p-stadt').value.trim();
+  const abwCheck    = document.getElementById('p-abw-check').checked;
+  const abwStrasse  = document.getElementById('p-abw-strasse').value.trim();
+  const abwHausnr   = document.getElementById('p-abw-hausnummer').value.trim();
+  const abwPlz      = document.getElementById('p-abw-plz').value.trim();
+  const abwStadt    = document.getElementById('p-abw-stadt').value.trim();
+
+  // Validation
+  const fields = [
+    ['p-pflegegrad','err-pflegegrad', pflegegrad],
+    ['p-anrede',    'err-anrede',     anrede],
+    ['profil-vorname','err-vorname',  vorname],
+    ['profil-nachname','err-nachname',nachname],
+    ['p-geburtsdatum','err-geburtsdatum', geburtsdatum],
+    ['p-strasse',   'err-strasse',    strasse],
+    ['p-hausnummer','err-hausnummer', hausnummer],
+    ['p-plz',       'err-plz',        plz],
+    ['p-stadt',     'err-stadt',      stadt],
+  ];
+  let ok = true;
+  fields.forEach(([,errId, val]) => {
+    const el = document.getElementById(errId);
+    if (el) { el.classList.toggle('show', !val); if (!val) ok = false; }
+  });
+  if (!ok) return;
+
+  const btn = document.getElementById('profil-save-btn');
+  btn.disabled = true; btn.textContent = 'Wird gespeichert...';
+
+  const fullName = anrede + ' ' + vorname + ' ' + nachname;
+  const adresse  = strasse + ' ' + hausnummer + ', ' + plz + ' ' + stadt;
+  const abwAdresse = abwCheck ? (abwStrasse + ' ' + abwHausnr + ', ' + abwPlz + ' ' + abwStadt) : null;
+
+  const { error } = await sb.from('customers').upsert({
+    id: state.user.id,
+    pflegegrad, anrede, vorname, nachname,
+    name: fullName,
+    geburtsdatum, strasse, hausnummer, plz, stadt,
+    adresse, abw_adresse: abwAdresse,
+    abo_aktiv: state.aboActive
+  });
+
+  btn.disabled = false; btn.textContent = 'Lieferdaten speichern';
+
+  if (error) { alert('Fehler beim Speichern: ' + error.message); return; }
+
+  if (!state.customer) state.customer = {};
+  Object.assign(state.customer, { pflegegrad, anrede, vorname, nachname, name: fullName, geburtsdatum, strasse, hausnummer, plz, stadt, adresse, abw_adresse: abwAdresse });
+
+  const s = document.getElementById('profil-save-success');
+  s.style.display = 'block';
+  setTimeout(() => { s.style.display = 'none'; }, 3000);
+
+  document.getElementById('nav-avatar').textContent = getInitials(vorname + ' ' + nachname);
+  const h = new Date().getHours();
+  document.getElementById('dash-greeting').textContent =
+    (h<12?'Guten Morgen':h<18?'Guten Tag':'Guten Abend') + ', ' + vorname + '!';
+}
+
+// ── SAVE VERSICHERUNGSDATEN ────────────────────
+async function saveVersichData() {
+  const versart  = document.getElementById('p-versart').value;
+  const versnr   = document.getElementById('p-versnr').value.trim();
+  const telefon  = document.getElementById('p-telefon').value.trim();
+  const emailOpt = document.getElementById('p-email-opt').value.trim();
+  const versorgung = document.querySelector('input[name="versorgung"]:checked')?.value || 'Erstversorgung';
+
+  const fields = [
+    ['err-versart', versart],
+    ['err-versnr',  versnr],
+    ['err-telefon', telefon],
+  ];
+  let ok = true;
+  fields.forEach(([errId, val]) => {
+    const el = document.getElementById(errId);
+    if (el) { el.classList.toggle('show', !val); if (!val) ok = false; }
+  });
+  if (!ok) return;
+
+  const btn = document.getElementById('versich-save-btn');
+  btn.disabled = true; btn.textContent = 'Wird gespeichert...';
+
+  const { error } = await sb.from('customers').upsert({
+    id: state.user.id,
+    versicherungsart: versart,
+    versicherungsnummer: versnr,
+    telefon, email_optional: emailOpt, versorgungsart: versorgung
+  });
+
+  btn.disabled = false; btn.textContent = 'Versicherungsdaten speichern';
+
+  if (error) { alert('Fehler beim Speichern: ' + error.message); return; }
+
+  if (!state.customer) state.customer = {};
+  Object.assign(state.customer, { versicherungsart: versart, versicherungsnummer: versnr, telefon, email_optional: emailOpt, versorgungsart: versorgung });
+
+  const s = document.getElementById('versich-save-success');
+  s.style.display = 'block';
+  setTimeout(() => { s.style.display = 'none'; }, 3000);
+}
+
+// ── PROFIL ABO TOGGLE ──────────────────────────
+async function toggleProfilAbo() {
+  state.aboActive = !state.aboActive;
+  document.getElementById('profil-abo-toggle').className = 'toggle-switch'+(state.aboActive?' on':'');
+  document.getElementById('profil-abo-notice').style.display = 'block';
+  document.getElementById('profil-abo-sub').textContent = state.aboActive
+    ? 'Ihre Box wird automatisch jeden Monat bestellt'
+    : 'Kein Abo — Sie bestellen manuell';
+  if (state.user) {
+    await sb.from('customers').update({abo_aktiv: state.aboActive}).eq('id', state.user.id);
+    if (state.customer) state.customer.abo_aktiv = state.aboActive;
+  }
+  loadDashboard();
+}
+
+// ── SESSION CHECK ON LOAD ──────────────────────
+(async () => {
+  loading(true, 'Wird geladen...');
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    state.user = session.user;
+    await loadCustomer();
+    goTo('dashboard');
+  }
+  loading(false);
+})();
+</script>
+</body>
+</html>
