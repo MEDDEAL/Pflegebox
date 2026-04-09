@@ -37,11 +37,14 @@ export default async function handler(req, res) {
       })
     });
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('Resend API error:', response.status, errorData);
-      return res.status(500).json({ error: 'Email sending failed' });
-    }
+if (!response.ok) {
+  const errorData = await response.text();
+  console.error('Resend API error:', response.status, errorData);
+  return res.status(response.status).json({
+    error: 'Email sending failed',
+    details: errorData
+  });
+}
 
     const data = await response.json();
     return res.status(200).json({ success: true, id: data.id });
