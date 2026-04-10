@@ -83,9 +83,13 @@ function buildAdminHtml({ customer, month, box, aboActive }) {
           </thead>
           <tbody>${produkte}</tbody>
         </table>
-        <p style="margin:0;">
-          <strong>Lieferadresse:</strong><br>${escapeHtml(adresse)}
-        </p>
+          <p style="margin:0;">
+          <strong>Lieferadresse:</strong><br>
+          ${deliveryName}<br>
+          ${deliveryStreet}<br>
+          ${deliveryCity}<br>
+          Telefon: ${deliveryPhone}
+</p>
       </div>
     </div>
   `;
