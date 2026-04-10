@@ -307,8 +307,8 @@ async function loadDashboard() {
     setVal('p-plz',         c.plz);
     setVal('p-stadt',       c.stadt);
 
-    // FIX: Abweichende Adresse vollständig befüllen
-    if (c.abw_adresse || c.abw_strasse || c.abw_plz || c.abw_stadt) {
+// FIX: Abweichende Adresse vollständig befüllen
+if (c.abw_adresse || c.abw_strasse || c.abw_hausnummer || c.abw_plz || c.abw_stadt) {
   document.getElementById('p-abw-check').checked = true;
   document.getElementById('p-abw-fields').style.display = 'block';
 
