@@ -767,7 +767,7 @@ const abwAdresszusatz=document.getElementById('p-abw-adresszusatz')?.value.trim(
   const adresse = strasse + ' ' + hausnummer + ', ' + plz + ' ' + stadt;
   const abwAdresse = abwCheck
   ? [
-      abwStrasse,
+      [abwStrasse, abwHausnummer].filter(Boolean).join(' '),
       [abwPlz, abwStadt].filter(Boolean).join(' '),
       abwAdresszusatz
     ].filter(Boolean).join(', ')
