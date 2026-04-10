@@ -112,11 +112,15 @@ async function doOrder() {
   const sigName = document.getElementById('sig-name')?.value || '';
   let pdfDoc = null;
   try {
-    pdfDoc = await generatePDF(box, c, month, signatureDataURL, sigName);
-  } catch(e) {
-    console.error('PDF Fehler:', e);
-    showToast('PDF-Fehler', 'Antrag konnte nicht erstellt werden: ' + e.message);
-  }
+  pdfDoc = await generatePDF(box, c, month, signatureDataURL, sigName);
+} catch (e) {
+  console.error('PDF Fehler:', e);
+  loading(false);
+  orderBtn.disabled = false;
+  orderBtn.innerHTML = 'Antrag abschicken';
+  showToast('PDF-Fehler', 'Antrag konnte nicht erstellt werden: ' + e.message);
+  return;
+}
 
   loading(true, 'Bestellung wird gespeichert...');
 
