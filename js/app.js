@@ -645,7 +645,11 @@ function initSignaturePad() {
   sigCanvas.style.height = '180px';
   sigCtx = sigCanvas.getContext('2d');
   sigCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
-  sigCtx.strokeStyle = '#1a1a1a'; sigCtx.lineWidth = 2.5; sigCtx.lineCap = 'round'; sigCtx.lineJoin = 'round';
+  sigCtx.strokeStyle = '#2563EB';
+  sigCtx.fillStyle = '#2563EB';
+  sigCtx.lineWidth = 2;
+  sigCtx.lineCap = 'round';
+  sigCtx.lineJoin = 'round';
   sigHasData = false;
   function getPos(e) { const r=sigCanvas.getBoundingClientRect(); const src=e.touches?e.touches[0]:e; return {x:src.clientX-r.left,y:src.clientY-r.top}; }
   sigCanvas.addEventListener('mousedown',  e=>{sigDrawing=true;const p=getPos(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);});
@@ -662,6 +666,8 @@ function hidePlaceholder() { const ph=document.getElementById('sig-placeholder')
 function clearSignature() {
   if (!sigCtx || !sigCanvas) return;
   sigCtx.clearRect(0,0,sigCanvas.width/window.devicePixelRatio,sigCanvas.height/window.devicePixelRatio);
+  sigCtx.strokeStyle = '#2563EB';
+  sigCtx.fillStyle = '#2563EB';
   sigHasData = false;
   const ph = document.getElementById('sig-placeholder'); if(ph) ph.style.display='flex';
 }
