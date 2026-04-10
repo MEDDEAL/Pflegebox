@@ -787,11 +787,11 @@ const abwInfoObj = abwCheck
     id:state.user.id, pflegegrad, anrede, vorname, nachname, name:fullName,
     geburtsdatum, strasse, hausnummer, plz, stadt, adresse,
     abw_adresse:abwAdresse,
-    abw_strasse:abwCheck ? abwStrasse : null,
+abw_strasse:abwCheck ? abwStrasse : null,
 abw_hausnummer:abwCheck ? abwHausnummer : null,
 abw_plz:abwCheck ? abwPlz : null,
 abw_stadt:abwCheck ? abwStadt : null,
-abw_zusatz:abwCheck ? abwZusatz : null,
+abw_adresszusatz:abwCheck ? abwAdresszusatz : null,
 abw_info:abwInfoObj,
 abo_aktiv:state.aboActive
   });
