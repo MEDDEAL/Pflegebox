@@ -28,7 +28,20 @@ function isValidEmail(value = '') {
 }
 
 function isValidPhone(value = '') {
-  return PHONE_REGEX.test(String(value).trim());
+  return /^\d{1,15}$/.test(String(value));
+}
+
+function sanitizePhoneInput(value = '') {
+  return String(value).replace(/\D/g, '').slice(0, 15);
+}
+
+function bindPhoneInput() {
+  const phoneInput = document.getElementById('p-telefon');
+  if (!phoneInput) return;
+
+  phoneInput.addEventListener('input', () => {
+    phoneInput.value = sanitizePhoneInput(phoneInput.value);
+  });
 }
 
 // ESCAPE HTML
@@ -348,7 +361,7 @@ async function loadDashboard() {
 
   setVal('p-versart', c.versicherungsart);
   setVal('p-versnr', c.versicherungsnummer);
-  setVal('p-telefon', c.telefon);
+  setVal('p-telefon', sanitizePhoneInput(c.telefon));
   setVal('p-email-opt', c.email_optional);
 
   if (c.versorgungsart === 'Wechselversorgung') {
@@ -846,7 +859,11 @@ abo_aktiv:state.aboActive
 
 async function saveVersichData() {
   const versart=document.getElementById('p-versart').value, versnr=document.getElementById('p-versnr').value.trim();
-  const telefon=document.getElementById('p-telefon').value.trim(), emailOpt=document.getElementById('p-email-opt').value.trim();
+  const telefonInput = document.getElementById('p-telefon');
+telefonInput.value = sanitizePhoneInput(telefonInput.value);
+
+  const telefon = telefonInput.value;
+  const emailOpt = document.getElementById('p-email-opt').value.trim();
   const versorgung = document.querySelector('input[name="versorgung"]:checked')?.value || 'Erstversorgung';
 
   const fields=[['err-versart',versart],['err-versnr',versnr],['err-telefon',telefon]];
@@ -1001,6 +1018,9 @@ card.appendChild(details);    list.appendChild(card);
 
 document.getElementById('login-pw').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 document.getElementById('login-email').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.addEventListener('DOMContentLoaded', () => {
+  bindPhoneInput();
+});
 
 // ══════════════════════════════════════════════════
 // SESSION CHECK ON LOAD
