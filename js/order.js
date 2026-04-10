@@ -265,16 +265,6 @@ await sendEmail(
   kundeHtml
 );
 
-  if (pdfDoc) {
-    try {
-      const blob = pdfDoc.output('blob'); const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url;
-      a.download = `Pflegebox_Antrag_${month.replace(' ','_')}.pdf`;
-      document.body.appendChild(a); a.click();
-      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
-    } catch(e) { console.error('PDF Download Fehler:', e); }
-  }
-
   loading(false); orderBtn.disabled = false; orderBtn.innerHTML = 'Antrag abschicken';
 
   // Confirmation Screen
