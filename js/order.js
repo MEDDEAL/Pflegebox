@@ -325,10 +325,13 @@ async function generatePDF(box, cust, month, sigDataURL, sigName) {
   y+=2;hline(y);y+=7;secNum(M,y,2);doc.setFontSize(10);doc.setFont('helvetica','bold');setTxt(BLACK);doc.text('Angehörige(r)/Pflegeperson',M+7,y-1);
   doc.setFontSize(6.5);doc.setFont('helvetica','normal');setTxt(GRAY);doc.text('Bitte die wichtigste private Pflegeperson eintragen',W-M,y-1,{align:'right'});y+=7;hline(y);y+=5;
   const abwInfo=cust.abw_info||{};const hasAbw=!!cust.abw_adresse;
-  const abwAddressRaw = hasAbw ? (cust.abw_adresse || '') : '';
-   const abwParts = abwAddressRaw.split(',').map(s => s.trim()).filter(Boolean);
-   const abwStreet = abwParts[0] || '';
-   const abwCityLine = abwParts.slice(1).join(', ') || ''; 
+  const abwStreet = hasAbw
+  ? [abwInfo.strasse || '', abwInfo.adresszusatz || ''].filter(Boolean).join(', ')
+  : '';
+
+  const abwCityLine = hasAbw
+  ? [abwInfo.plz || '', abwInfo.stadt || ''].filter(Boolean).join(' ')
+  : '';
   chkLbl(M,y,abwInfo.anrede==='Frau','Frau:');chkLbl(M+22,y,abwInfo.anrede==='Herr','Herr:');y+=7;
   fieldBox(M,y,hw-1,11,'Vorname:',hasAbw?abwInfo.vorname||'':'');fieldBox(M+hw+1,y,hw-1,11,'Name:',hasAbw?abwInfo.nachname||'':'');y+=13;
   fieldBox(M,y,hw-1,11,'Straße/Nr.:',hasAbw ? abwStreet : '');
