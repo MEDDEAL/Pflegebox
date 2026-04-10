@@ -808,7 +808,7 @@ abo_aktiv:state.aboActive
   abw_hausnummer: abwCheck ? abwHausnummer : null,
   abw_plz: abwCheck ? abwPlz : null,
   abw_stadt: abwCheck ? abwStadt : null,
-  abw_zusatz: abwCheck ? abwZusatz : null,
+  abw_adresszusatz: abwCheck ? abwAdresszusatz : null,
   abw_info: abwInfoObj
 });
 
