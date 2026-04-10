@@ -18,6 +18,19 @@ sb.auth.onAuthStateChange((event) => {
   }
 });
 
+// Regex für Telefon und alle erfassten E-Mails
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const PHONE_REGEX = /^(?:\+49|0)[0-9][0-9\s\-()\/]{5,19}$/;
+
+function isValidEmail(value = '') {
+  return EMAIL_REGEX.test(String(value).trim());
+}
+
+function isValidPhone(value = '') {
+  return PHONE_REGEX.test(String(value).trim());
+}
+
 // ESCAPE HTML
 
 function escapeHtml(value = '') {
@@ -160,7 +173,11 @@ async function doLogin() {
   const err   = document.getElementById('login-error');
   const btn   = document.getElementById('login-btn');
 
-  if (!email || !pw) { err.textContent='Bitte E-Mail und Passwort eingeben.'; err.classList.add('show'); return; }
+  if (!isValidEmail(email)) {
+  err.textContent = 'Bitte eine gültige E-Mail-Adresse eingeben.';
+  err.classList.add('show');
+  return;
+}
 
   if (state.loginCooldown) {
     err.textContent='Zu viele Versuche. Bitte warten Sie 30 Sekunden.';
@@ -216,6 +233,12 @@ function togglePwVisibility() {
 async function doForgot() {
   const email = document.getElementById('forgot-email').value.trim();
   if (!email) return;
+
+  if (!isValidEmail(email)) {
+    showToast('Ungültige E-Mail', 'Bitte geben Sie eine gültige E-Mail-Adresse ein.');
+    return;
+  }
+
   loading(true, 'Link wird gesendet...');
   await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
   loading(false);
@@ -750,6 +773,16 @@ async function saveVersichData() {
   fields.forEach(([errId, val]) => { const el=document.getElementById(errId); if(el){el.classList.toggle('show',!val);if(!val) ok=false;} });
   if (!ok) return;
 
+  if (!isValidPhone(telefon)) {
+  showToast('Ungültige Telefonnummer', 'Bitte geben Sie eine gültige Telefonnummer ein.');
+  return;
+}
+
+if (emailOpt && !isValidEmail(emailOpt)) {
+  showToast('Ungültige E-Mail', 'Bitte geben Sie eine gültige E-Mail-Adresse ein.');
+  return;
+}
+   
   const btn = document.getElementById('versich-save-btn');
   btn.disabled = true; btn.textContent = 'Wird gespeichert...';
 
