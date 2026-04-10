@@ -7,25 +7,72 @@
 // E-MAIL TEMPLATES
 // ══════════════════════════════════════════════════
 
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function buildOrderEmailAdmin(box, c, month, aboActive) {
-  const name = [c?.anrede,c?.vorname,c?.nachname].filter(Boolean).join(' ')||'Unbekannt';
-  const adresse = c?.strasse ? `${c.strasse} ${c.hausnummer}, ${c.plz} ${c.stadt}` : (c?.adresse||'—');
-  const produkte = box.map(i=>`<tr><td style="padding:6px 12px;border-bottom:1px solid #f0f0f0">${i.name}${i.groesse?' (Gr. '+i.groesse+')':''}</td><td style="padding:6px 12px;border-bottom:1px solid #f0f0f0;text-align:right">× ${i.qty}</td></tr>`).join('');
-  return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Neue Bestellung — 24Pflegebox</h2></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p style="margin:0 0 16px;"><strong>Kunde:</strong> ${name}<br><strong>E-Mail:</strong> ${c?.email||'—'}<br><strong>Monat:</strong> ${month}<br><strong>Bestelltyp:</strong> ${aboActive?'Monatliches Abo':'Einmalig'}</p><table style="width:100%;border-collapse:collapse;margin-bottom:16px;"><thead><tr style="background:#f5f5f5"><th style="padding:8px 12px;text-align:left">Produkt</th><th style="padding:8px 12px;text-align:right">Menge</th></tr></thead><tbody>${produkte}</tbody></table><p style="margin:0;"><strong>Lieferadresse:</strong><br>${adresse}</p></div></div>`;
+  const name = escapeHtml(
+    [c?.anrede, c?.vorname, c?.nachname].filter(Boolean).join(' ') || 'Unbekannt'
+  );
+
+  const adresse = escapeHtml(
+    c?.strasse
+      ? `${c.strasse} ${c.hausnummer}, ${c.plz} ${c.stadt}`
+      : (c?.adresse || '—')
+  );
+
+  const email = escapeHtml(c?.email || '—');
+  const safeMonth = escapeHtml(month || '—');
+  const bestelltyp = aboActive ? 'Monatliches Abo' : 'Einmalig';
+
+  const produkte = box.map(i => {
+    const produktName = escapeHtml(i.name || '');
+    const groesse = i.groesse ? ` (Gr. ${escapeHtml(i.groesse)})` : '';
+    const qty = escapeHtml(i.qty ?? '');
+    return `<tr><td style="padding:6px 12px;border-bottom:1px solid #f0f0f0">${produktName}${groesse}</td><td style="padding:6px 12px;border-bottom:1px solid #f0f0f0;text-align:right">× ${qty}</td></tr>`;
+  }).join('');
+
+  return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Neue Bestellung — 24Pflegebox</h2></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p style="margin:0 0 16px;"><strong>Kunde:</strong> ${name}<br><strong>E-Mail:</strong> ${email}<br><strong>Monat:</strong> ${safeMonth}<br><strong>Bestelltyp:</strong> ${bestelltyp}</p><table style="width:100%;border-collapse:collapse;margin-bottom:16px;"><thead><tr style="background:#f5f5f5"><th style="padding:8px 12px;text-align:left">Produkt</th><th style="padding:8px 12px;text-align:right">Menge</th></tr></thead><tbody>${produkte}</tbody></table><p style="margin:0;"><strong>Lieferadresse:</strong><br>${adresse}</p></div></div>`;
 }
 
 function buildOrderEmailKunde(box, c, month, aboActive) {
-  const vorname = c?.vorname||'Kunde';
-  const produkte = box.map(i=>`<li style="padding:4px 0">${i.name}${i.groesse?' (Gr. '+i.groesse+')':''} × ${i.qty}</li>`).join('');
-  return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Ihre Bestellung ist eingegangen!</h2><p style="color:#9FE1CB;margin:6px 0 0;font-size:14px;">24Pflegebox — ${month}</p></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p>Guten Tag, ${vorname},</p><p>vielen Dank! Wir haben Ihre Pflegebox erhalten und bereiten sie für Sie vor.</p><div style="background:#E1F5EE;border-radius:8px;padding:16px;margin:16px 0;"><strong style="color:#085041;">Ihre Bestellung:</strong><ul style="margin:8px 0 0;padding-left:20px;color:#0F6E56">${produkte}</ul></div>${aboActive?'<p style="color:#0F6E56;"><strong>✓ Ihr monatliches Abo ist aktiv.</strong></p>':''}<p style="color:#888;font-size:13px;margin-top:24px;">Bei Fragen: <a href="mailto:${ADMIN_EMAIL}" style="color:#1D9E75">${ADMIN_EMAIL}</a></p></div></div>`;
+  const vorname = escapeHtml(c?.vorname || 'Kunde');
+  const safeMonth = escapeHtml(month || '—');
+  const safeAdminEmail = escapeHtml(ADMIN_EMAIL);
+
+  const produkte = box.map(i => {
+    const produktName = escapeHtml(i.name || '');
+    const groesse = i.groesse ? ` (Gr. ${escapeHtml(i.groesse)})` : '';
+    const qty = escapeHtml(i.qty ?? '');
+    return `<li style="padding:4px 0">${produktName}${groesse} × ${qty}</li>`;
+  }).join('');
+
+  return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Ihre Bestellung ist eingegangen!</h2><p style="color:#9FE1CB;margin:6px 0 0;font-size:14px;">24Pflegebox — ${safeMonth}</p></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p>Guten Tag, ${vorname},</p><p>vielen Dank! Wir haben Ihre Pflegebox erhalten und bereiten sie für Sie vor.</p><div style="background:#E1F5EE;border-radius:8px;padding:16px;margin:16px 0;"><strong style="color:#085041;">Ihre Bestellung:</strong><ul style="margin:8px 0 0;padding-left:20px;color:#0F6E56">${produkte}</ul></div>${aboActive?'<p style="color:#0F6E56;"><strong>✓ Ihr monatliches Abo ist aktiv.</strong></p>':''}<p style="color:#888;font-size:13px;margin-top:24px;">Bei Fragen: <a href="mailto:${safeAdminEmail}" style="color:#1D9E75">${safeAdminEmail}</a></p></div></div>`;
 }
 
 function buildExtraEmail(type, c, anzahl) {
-  const name = [c?.anrede,c?.vorname,c?.nachname].filter(Boolean).join(' ')||'Unbekannt';
-  const adresse = c?.strasse ? `${c.strasse} ${c.hausnummer}, ${c.plz} ${c.stadt}` : (c?.adresse||'—');
-  const titel = type==='bett'?'Waschbare Bettschutzeinlagen':'Hausnotrufsystem';
-  const detail = type==='bett'?`Anzahl: ${anzahl} Einlage(n)`:'Einmalige Beantragung über Vitalset GmbH';
-  return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Neuer Antrag — ${titel}</h2></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p><strong>Kunde:</strong> ${name}<br><strong>E-Mail:</strong> ${c?.email||'—'}<br><strong>Telefon:</strong> ${c?.telefon||'—'}<br><strong>${detail}</strong><br><strong>Lieferadresse:</strong> ${adresse}</p></div></div>`;
+  const name = escapeHtml(
+    [c?.anrede, c?.vorname, c?.nachname].filter(Boolean).join(' ') || 'Unbekannt'
+  );
+
+  const adresse = escapeHtml(
+    c?.strasse
+      ? `${c.strasse} ${c.hausnummer}, ${c.plz} ${c.stadt}`
+      : (c?.adresse || '—')
+  );
+
+  const email = escapeHtml(c?.email || '—');
+  const telefon = escapeHtml(c?.telefon || '—');
+  const titel = escapeHtml(type === 'bett' ? 'Waschbare Bettschutzeinlagen' : 'Hausnotrufsystem');
+  const detail = escapeHtml(type === 'bett' ? `Anzahl: ${anzahl} Einlage(n)` : 'Einmalige Beantragung über Vitalset GmbH');
+
+  return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Neuer Antrag — ${titel}</h2></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p><strong>Kunde:</strong> ${name}<br><strong>E-Mail:</strong> ${email}<br><strong>Telefon:</strong> ${telefon}<br><strong>${detail}</strong><br><strong>Lieferadresse:</strong> ${adresse}</p></div></div>`;
 }
 
 // Wandelt das im Browser erzeugte PDF-Blob in einen Base64-String um,
