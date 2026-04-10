@@ -779,11 +779,7 @@ const abwInfoObj = abwCheck
       betreuer: abwBetreuer,
       anrede: abwAnrede,
       vorname: abwVorname,
-      nachname: abwNachname,
-      strasse: abwStrasse,
-      plz: abwPlz,
-      stadt: abwStadt,
-      adresszusatz: abwAdresszusatz
+      nachname: abwNachname
     }
   : null;
 
