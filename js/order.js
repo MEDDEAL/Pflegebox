@@ -42,9 +42,13 @@ function buildOrderEmailAdmin(box, c, month, aboActive) {
 }
 
 function buildOrderEmailKunde(box, c, month, aboActive) {
-  const vorname = escapeHtml(c?.vorname || 'Kunde');
+  const anrede = c?.anrede === 'Herr' ? 'Herr' : c?.anrede === 'Frau' ? 'Frau' : '';
+  const nachname = escapeHtml(c?.nachname || 'Kunde');
+  const anredeNachname = [anrede, nachname].filter(Boolean).join(' ');
   const safeMonth = escapeHtml(month || '—');
   const safeAdminEmail = escapeHtml(ADMIN_EMAIL);
+  const safePhoneDisplay = '04052477340';
+  const safePhoneHref = '+494052477340';
 
   const produkte = box.map(i => {
     const produktName = escapeHtml(i.name || '');
@@ -53,7 +57,25 @@ function buildOrderEmailKunde(box, c, month, aboActive) {
     return `<li style="padding:4px 0">${produktName}${groesse} × ${qty}</li>`;
   }).join('');
 
-  return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Ihre Bestellung ist eingegangen!</h2><p style="color:#9FE1CB;margin:6px 0 0;font-size:14px;">24Pflegebox — ${safeMonth}</p></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p>Guten Tag, ${vorname},</p><p>vielen Dank! Wir haben Ihre Pflegebox erhalten und bereiten sie für Sie vor.</p><div style="background:#E1F5EE;border-radius:8px;padding:16px;margin:16px 0;"><strong style="color:#085041;">Ihre Bestellung:</strong><ul style="margin:8px 0 0;padding-left:20px;color:#0F6E56">${produkte}</ul></div>${aboActive?'<p style="color:#0F6E56;"><strong>✓ Ihr monatliches Abo ist aktiv.</strong></p>':''}<p style="color:#888;font-size:13px;margin-top:24px;">Bei Fragen: <a href="mailto:${safeAdminEmail}" style="color:#1D9E75">${safeAdminEmail}</a></p></div></div>`;
+  const aboHinweis = aboActive
+    ? `<p style="margin:16px 0 0;">Sofern Sie ein monatliches Abo gewählt haben, wird dieses nach erfolgreicher Prüfung Ihres Antrags in der weiteren Versorgung berücksichtigt.</p>`
+    : '';
+
+  const legalFooter = `
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:12px;color:#666;line-height:1.7;">
+      <strong>Medical Deal GmbH</strong><br>
+      Kieler Straße 407<br>
+      22525 Hamburg<br>
+      Geschäftsführer: Dennis Himburg & Mohammad Bazargan<br>
+      Handelsregister: HRB 186455 Amtsgericht Hamburg<br>
+      USt-IdNr.: DE370434539<br>
+      IK-Nummer: 330205860<br>
+      E-Mail: <a href="mailto:app@24pflegebox.de" style="color:#1D9E75">app@24pflegebox.de</a><br>
+      Telefon: <a href="tel:+494052477340" style="color:#1D9E75">04052477340</a>
+    </div>
+  `;
+
+  return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Eingangsbestätigung Ihres Antrags</h2><p style="color:#9FE1CB;margin:6px 0 0;font-size:14px;">24Pflegebox — ${safeMonth}</p></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p>Guten Tag ${anredeNachname},</p><p>vielen Dank für Ihren Antrag bei 24Pflegebox.</p><p>Ihre Unterlagen sind bei uns eingegangen und werden nun von unserem Team geprüft. Nach erfolgreicher Prüfung und Freigabe durch die zuständige Stelle erfolgt die weitere Bearbeitung Ihrer Versorgung.</p><div style="background:#E1F5EE;border-radius:8px;padding:16px;margin:16px 0;"><strong style="color:#085041;">Ihre beantragten Produkte:</strong><ul style="margin:8px 0 0;padding-left:20px;color:#0F6E56">${produkte}</ul></div>${aboHinweis}<p style="margin-top:24px;">Sollten Sie noch Fragen haben, rufen Sie uns gerne an oder schreiben Sie uns eine Mail.<br>Telefon: <a href="tel:${safePhoneHref}" style="color:#1D9E75">${safePhoneDisplay}</a><br>E-Mail: <a href="mailto:${safeAdminEmail}" style="color:#1D9E75">${safeAdminEmail}</a></p>${legalFooter}</div></div>`;
 }
 
 function buildExtraEmail(type, c, anzahl) {
@@ -259,7 +281,17 @@ async function generatePDF(box, cust, month, sigDataURL, sigName) {
   function hline(y,x1,x2,lw=0.3,color=GRAY){if(Array.isArray(color)){doc.setDrawColor(color[0],color[1],color[2]);}else{doc.setDrawColor(95,94,90);}doc.setLineWidth(lw);doc.line(x1||M,y,x2||(W-M),y);}
   function secNum(x,y,n){setFill(TEAL);doc.roundedRect(x,y-4.5,5,5,1,1,'F');setTxt(WHITE);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text(String(n),x+2.5,y-0.8,{align:'center'});}
   function fieldBox(x,y,w,h,lbl,val=''){setStroke([204,204,204]);doc.setLineWidth(0.3);doc.rect(x,y,w,h);doc.setFontSize(6);doc.setFont('helvetica','normal');setTxt(GRAY);doc.text(lbl,x+1.5,y+3);if(val){doc.setFontSize(8);setTxt(BLACK);doc.text(String(val),x+1.5,y+h-2);}}
-  function chkBox(x,y,checked=false){setStroke([68,68,65]);doc.setLineWidth(0.4);doc.rect(x,y,3.5,3.5);if(checked){setStroke(TEAL);doc.setLineWidth(0.8);doc.line(x+0.8,y+1.8,x+1.4,y+0.8);doc.line(x+1.4,y+0.8,x+2.8,y+2.8);}}
+  function chkBox(x,y,checked=false){
+  setStroke([68,68,65]);
+  doc.setLineWidth(0.4);
+  doc.rect(x,y,3.5,3.5);
+  if(checked){
+    setStroke(TEAL);
+    doc.setLineWidth(0.8);
+    doc.line(x+0.7, y+1.9, x+1.5, y+2.7);
+    doc.line(x+1.5, y+2.7, x+2.9, y+0.8);
+  }
+}
   function chkLbl(x,y,checked,label,size=7,maxW=null){chkBox(x,y);doc.setFontSize(size);doc.setFont('helvetica','normal');setTxt(BLACK);let lbl=label;if(maxW){while(lbl.length>0&&doc.getTextWidth(lbl)>maxW)lbl=lbl.slice(0,-1);}doc.text(lbl,x+5,y+3);}
   function wrapText(x,y,text,maxW,size=7.5,lineH=4){doc.setFontSize(size);doc.setFont('helvetica','normal');setTxt(BLACK);const lines=doc.splitTextToSize(text,maxW);doc.text(lines,x,y);return y+lines.length*lineH;}
 
