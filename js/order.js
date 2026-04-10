@@ -28,6 +28,22 @@ function buildExtraEmail(type, c, anzahl) {
   return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Neuer Antrag — ${titel}</h2></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p><strong>Kunde:</strong> ${name}<br><strong>E-Mail:</strong> ${c?.email||'—'}<br><strong>Telefon:</strong> ${c?.telefon||'—'}<br><strong>${detail}</strong><br><strong>Lieferadresse:</strong> ${adresse}</p></div></div>`;
 }
 
+// Wandelt das im Browser erzeugte PDF-Blob in einen Base64-String um,
+// damit die Datei serverseitig per Resend als E-Mail-Anhang versendet werden kann.
+
+async function blobToBase64(blob) {
+  const buffer = await blob.arrayBuffer();
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000;
+
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+
+  return btoa(binary);
+}
+
 // ══════════════════════════════════════════════════
 // ORDER (FIX: Variable-Hoisting + Doppelklick-Schutz)
 // ══════════════════════════════════════════════════
