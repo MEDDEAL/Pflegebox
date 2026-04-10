@@ -596,12 +596,18 @@ if (ort) {
   adressEl.appendChild(document.createTextNode(ort));
 }
 
-if (c.abw_adresse) {
+const abwAddressText = c.abw_adresse || [
+  [c.abw_strasse, c.abw_hausnummer].filter(Boolean).join(' '),
+  [c.abw_plz, c.abw_stadt].filter(Boolean).join(' '),
+  c.abw_adresszusatz
+].filter(Boolean).join(', ');
+
+if (abwAddressText) {
   adressEl.appendChild(document.createElement('br'));
   const extra = document.createElement('span');
   extra.style.fontSize = '12px';
   extra.style.color = 'var(--teal-600)';
-  extra.textContent = `Abweichende Lieferadresse: ${c.abw_adresse}`;
+  extra.textContent = `Abweichende Lieferadresse: ${abwAddressText}`;
   adressEl.appendChild(extra);
 }
   } else {
