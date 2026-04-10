@@ -10,37 +10,45 @@ function escapeHtml(value = '') {
 }
 
 function splitAddress(fullAddress = '') {
-  const parts = String(fullAddress).split(',').map(s => s.trim()).filter(Boolean);
+  const parts = String(fullAddress)
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+
   return {
     street: parts[0] || '',
     cityLine: parts.slice(1).join(', ') || ''
   };
 }
 
+function firstNonEmpty(...values) {
+  return values.find(value => String(value || '').trim()) || '';
+}
+
 function buildAdminHtml({ customer, month, box, aboActive }) {
   const customerName = escapeHtml(
-    [customer?.anrede, customer?.vorname, customer?.nachname].filter(Boolean).join(' ') || 'Unbekannt'
+    [customer?.anrede, customer?.vorname, customer?.nachname]
+      .filter(Boolean)
+      .join(' ') || 'Unbekannt'
   );
 
-  const hasAbw = !!customer?.abw_adresse;
+  const hasAbw = !!(
+    customer?.abw_adresse ||
+    customer?.abw_strasse ||
+    customer?.abw_hausnummer ||
+    customer?.abw_plz ||
+    customer?.abw_stadt ||
+    customer?.abw_info?.strasse ||
+    customer?.abw_info?.plz ||
+    customer?.abw_info?.stadt
+  );
   const abw = customer?.abw_info || {};
-  const deliveryName = escapeHtml(
-  hasAbw
-    ? [abw?.vorname, abw?.nachname].filter(Boolean).join(' ') || customer?.nachname || '—'
-    : [customer?.vorname, customer?.nachname].filter(Boolean).join(' ') || '—'
-);
-
-const deliveryStreet = escapeHtml(
-  hasAbw
-    ? [abw?.strasse || '', abw?.adresszusatz || ''].filter(Boolean).join(', ')
-    : `${customer?.strasse || ''} ${customer?.hausnummer || ''}`.trim()
-);
-
-const deliveryCity = escapeHtml(
-  hasAbw
-    ? [abw?.plz || '', abw?.stadt || ''].filter(Boolean).join(' ')
-    : `${customer?.plz || ''} ${customer?.stadt || ''}`.trim()
-);
+  const abwAddressRaw = firstNonEmpty(
+    customer?.abw_adresse,
+    [customer?.abw_strasse, customer?.abw_hausnummer].filter(Boolean).join(' '),
+    [customer?.abw_plz, customer?.abw_stadt].filter(Boolean).join(' ')
+  );
+  const abwSplit = splitAddress(abwAddressRaw);
 
   const deliveryName = escapeHtml(
     hasAbw
@@ -50,13 +58,27 @@ const deliveryCity = escapeHtml(
 
   const deliveryStreet = escapeHtml(
     hasAbw
-      ? abwSplit.street
+      ? [
+          firstNonEmpty(
+            [abw?.strasse, abw?.hausnummer].filter(Boolean).join(' '),
+            [customer?.abw_strasse, customer?.abw_hausnummer].filter(Boolean).join(' '),
+            abwSplit.street
+          ),
+          firstNonEmpty(abw?.adresszusatz, customer?.abw_adresszusatz)
+        ].filter(Boolean).join(', ')
       : `${customer?.strasse || ''} ${customer?.hausnummer || ''}`.trim()
   );
 
   const deliveryCity = escapeHtml(
     hasAbw
-      ? abwSplit.cityLine
+      ? [
+          firstNonEmpty(abw?.plz, customer?.abw_plz),
+          firstNonEmpty(
+            abw?.stadt,
+            customer?.abw_stadt,
+            abwSplit.cityLine
+          )
+        ].filter(Boolean).join(' ')
       : `${customer?.plz || ''} ${customer?.stadt || ''}`.trim()
   );
 
@@ -70,45 +92,12 @@ const deliveryCity = escapeHtml(
       const produktName = escapeHtml(item.name || '');
       const groesse = item.groesse ? ` (Gr. ${escapeHtml(item.groesse)})` : '';
       const qty = escapeHtml(item.qty ?? '');
+
       return `<tr><td style="padding:6px 12px;border-bottom:1px solid #f0f0f0">${produktName}${groesse}</td><td style="padding:6px 12px;border-bottom:1px solid #f0f0f0;text-align:right">× ${qty}</td></tr>`;
     })
     .join('');
 
   return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Neue Bestellung — 24Pflegebox</h2></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p style="margin:0 0 16px;"><strong>Kunde:</strong> ${customerName}<br><strong>E-Mail:</strong> ${email}<br><strong>Monat:</strong> ${safeMonth}<br><strong>Bestelltyp:</strong> ${bestelltyp}</p><table style="width:100%;border-collapse:collapse;margin-bottom:16px;"><thead><tr style="background:#f5f5f5"><th style="padding:8px 12px;text-align:left">Produkt</th><th style="padding:8px 12px;text-align:right">Menge</th></tr></thead><tbody>${produkte}</tbody></table><p style="margin:0;"><strong>Lieferadresse:</strong><br>${deliveryName}<br>${deliveryStreet}<br>${deliveryCity}<br>Telefon: ${deliveryPhone}</p></div></div>`;
-})
-    .join('');
-
-  return `
-    <div style="font-family:sans-serif;max-width:560px;margin:0 auto;">
-      <div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;">
-        <h2 style="color:#fff;margin:0;font-size:18px;">Neue Bestellung — 24Pflegebox</h2>
-      </div>
-      <div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;">
-        <p style="margin:0 0 16px;">
-          <strong>Kunde:</strong> ${escapeHtml(name)}<br>
-          <strong>E-Mail:</strong> ${escapeHtml(customer?.email || '—')}<br>
-          <strong>Monat:</strong> ${escapeHtml(month || '—')}<br>
-          <strong>Bestelltyp:</strong> ${aboActive ? 'Monatliches Abo' : 'Einmalig'}
-        </p>
-        <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
-          <thead>
-            <tr style="background:#f5f5f5">
-              <th style="padding:8px 12px;text-align:left">Produkt</th>
-              <th style="padding:8px 12px;text-align:right">Menge</th>
-            </tr>
-          </thead>
-          <tbody>${produkte}</tbody>
-        </table>
-          <p style="margin:0;">
-          <strong>Lieferadresse:</strong><br>
-          ${deliveryName}<br>
-          ${deliveryStreet}<br>
-          ${deliveryCity}<br>
-          Telefon: ${deliveryPhone}
-</p>
-      </div>
-    </div>
-  `;
 }
 
 export default async function handler(req, res) {
