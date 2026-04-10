@@ -9,27 +9,57 @@ function escapeHtml(value = '') {
     .replace(/'/g, '&#39;');
 }
 
-function buildAdminHtml({ customer, month, box, aboActive }) {
-  const name = [
-    customer?.anrede,
-    customer?.vorname,
-    customer?.nachname
-  ].filter(Boolean).join(' ') || 'Unbekannt';
+function splitAddress(fullAddress = '') {
+  const parts = String(fullAddress).split(',').map(s => s.trim()).filter(Boolean);
+  return {
+    street: parts[0] || '',
+    cityLine: parts.slice(1).join(', ') || ''
+  };
+}
 
-  const adresse = customer?.strasse
-    ? `${customer.strasse} ${customer.hausnummer}, ${customer.plz} ${customer.stadt}`
-    : (customer?.adresse || '—');
+function buildAdminHtml({ customer, month, box, aboActive }) {
+  const customerName = escapeHtml(
+    [customer?.anrede, customer?.vorname, customer?.nachname].filter(Boolean).join(' ') || 'Unbekannt'
+  );
+
+  const hasAbw = !!customer?.abw_adresse;
+  const abw = customer?.abw_info || {};
+  const abwSplit = splitAddress(customer?.abw_adresse || '');
+
+  const deliveryName = escapeHtml(
+    hasAbw
+      ? [abw?.vorname, abw?.nachname].filter(Boolean).join(' ') || customer?.nachname || '—'
+      : [customer?.vorname, customer?.nachname].filter(Boolean).join(' ') || '—'
+  );
+
+  const deliveryStreet = escapeHtml(
+    hasAbw
+      ? abwSplit.street
+      : `${customer?.strasse || ''} ${customer?.hausnummer || ''}`.trim()
+  );
+
+  const deliveryCity = escapeHtml(
+    hasAbw
+      ? abwSplit.cityLine
+      : `${customer?.plz || ''} ${customer?.stadt || ''}`.trim()
+  );
+
+  const deliveryPhone = escapeHtml(customer?.telefon || '—');
+  const email = escapeHtml(customer?.email || '—');
+  const safeMonth = escapeHtml(month || '—');
+  const bestelltyp = aboActive ? 'Monatliches Abo' : 'Einmalig';
 
   const produkte = (box || [])
     .map(item => {
-      const name = escapeHtml(item.name || '');
+      const produktName = escapeHtml(item.name || '');
       const groesse = item.groesse ? ` (Gr. ${escapeHtml(item.groesse)})` : '';
       const qty = escapeHtml(item.qty ?? '');
-      return `<tr>
-        <td style="padding:6px 12px;border-bottom:1px solid #f0f0f0">${name}${groesse}</td>
-        <td style="padding:6px 12px;border-bottom:1px solid #f0f0f0;text-align:right">× ${qty}</td>
-      </tr>`;
+      return `<tr><td style="padding:6px 12px;border-bottom:1px solid #f0f0f0">${produktName}${groesse}</td><td style="padding:6px 12px;border-bottom:1px solid #f0f0f0;text-align:right">× ${qty}</td></tr>`;
     })
+    .join('');
+
+  return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Neue Bestellung — 24Pflegebox</h2></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p style="margin:0 0 16px;"><strong>Kunde:</strong> ${customerName}<br><strong>E-Mail:</strong> ${email}<br><strong>Monat:</strong> ${safeMonth}<br><strong>Bestelltyp:</strong> ${bestelltyp}</p><table style="width:100%;border-collapse:collapse;margin-bottom:16px;"><thead><tr style="background:#f5f5f5"><th style="padding:8px 12px;text-align:left">Produkt</th><th style="padding:8px 12px;text-align:right">Menge</th></tr></thead><tbody>${produkte}</tbody></table><p style="margin:0;"><strong>Lieferadresse:</strong><br>${deliveryName}<br>${deliveryStreet}<br>${deliveryCity}<br>Telefon: ${deliveryPhone}</p></div></div>`;
+})
     .join('');
 
   return `
@@ -115,7 +145,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         from: `24Pflegebox <${process.env.FROM_EMAIL || 'app@24pflegebox.de'}>`,
         to: ['app@24pflegebox.de'],
-        subject: `Neue Bestellung — ${customer?.vorname || 'Kunde'} — ${month}`,
+        subject: `Neue Bestellung — ${(customer?.vorname || '').trim()} ${(customer?.nachname || '').trim()} — ${month}`,
         html,
         attachments: [
           {
