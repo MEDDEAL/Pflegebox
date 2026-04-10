@@ -308,20 +308,25 @@ async function loadDashboard() {
     setVal('p-stadt',       c.stadt);
 
     // FIX: Abweichende Adresse vollständig befüllen
-    if (c.abw_adresse) {
-      document.getElementById('p-abw-check').checked = true;
-      document.getElementById('p-abw-fields').style.display = 'block';
-      const abw = c.abw_info || {};
-      setVal('p-abw-beziehung', abw.beziehung);
-      setVal('p-abw-anrede', abw.anrede);
-      setVal('p-abw-vorname', abw.vorname);
-      setVal('p-abw-nachname', abw.nachname);
-      setVal('p-abw-strasse', abw.strasse);
-      setVal('p-abw-plz', abw.plz);
-      setVal('p-abw-stadt', abw.stadt);
-      setVal('p-abw-adresszusatz', abw.adresszusatz);
-      if (abw.betreuer) document.getElementById('p-abw-betreuer').checked = true;
-    }
+    if (c.abw_adresse || c.abw_strasse || c.abw_plz || c.abw_stadt) {
+  document.getElementById('p-abw-check').checked = true;
+  document.getElementById('p-abw-fields').style.display = 'block';
+
+  const abw = c.abw_info || {};
+
+  setVal('p-abw-beziehung', abw.beziehung);
+  setVal('p-abw-anrede', abw.anrede);
+  setVal('p-abw-vorname', abw.vorname);
+  setVal('p-abw-nachname', abw.nachname);
+
+  setVal('p-abw-strasse', c.abw_strasse || '');
+  setVal('p-abw-hausnummer', c.abw_hausnummer || '');
+  setVal('p-abw-plz', c.abw_plz || '');
+  setVal('p-abw-stadt', c.abw_stadt || '');
+  setVal('p-abw-adresszusatz', c.abw_adresszusatz || '');
+
+  if (abw.betreuer) document.getElementById('p-abw-betreuer').checked = true;
+}
 
     setVal('p-versart',    c.versicherungsart);
     setVal('p-versnr',     c.versicherungsnummer);
