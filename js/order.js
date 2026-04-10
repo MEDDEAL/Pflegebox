@@ -100,18 +100,39 @@ function buildExtraEmail(type, c, anzahl) {
     [c?.anrede, c?.vorname, c?.nachname].filter(Boolean).join(' ') || 'Unbekannt'
   );
 
-  const adresse = escapeHtml(
-    c?.strasse
-      ? `${c.strasse} ${c.hausnummer}, ${c.plz} ${c.stadt}`
-      : (c?.adresse || '—')
-  );
+  const kundenAdresse = escapeHtml(
+  c?.strasse
+    ? `${c.strasse} ${c.hausnummer}, ${c.plz} ${c.stadt}`
+    : (c?.adresse || '—')
+);
+
+const lieferAdresseRaw =
+  c?.abw_adresse
+    ? c.abw_adresse
+    : (c?.abw_strasse || c?.abw_hausnummer || c?.abw_plz || c?.abw_stadt)
+      ? [
+          [c?.abw_strasse, c?.abw_hausnummer].filter(Boolean).join(' '),
+          [c?.abw_plz, c?.abw_stadt].filter(Boolean).join(' '),
+          c?.abw_adresszusatz
+        ].filter(Boolean).join(', ')
+      : '';
+
+const lieferAdresse = escapeHtml(lieferAdresseRaw || '—');
+const hasAbweichendeLieferadresse = !!lieferAdresseRaw;
 
   const email = escapeHtml(c?.email || '—');
   const telefon = escapeHtml(c?.telefon || '—');
   const titel = escapeHtml(type === 'bett' ? 'Waschbare Bettschutzeinlagen' : 'Hausnotrufsystem');
   const detail = escapeHtml(type === 'bett' ? `Anzahl: ${anzahl} Einlage(n)` : 'Einmalige Beantragung über Vitalset GmbH');
 
-  return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Neuer Antrag — ${titel}</h2></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p><strong>Kunde:</strong> ${name}<br><strong>E-Mail:</strong> ${email}<br><strong>Telefon:</strong> ${telefon}<br><strong>${detail}</strong><br><strong>Lieferadresse:</strong> ${adresse}</p></div></div>`;
+  return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Neuer Antrag — ${titel}</h2></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p>
+  <strong>Kunde:</strong> ${name}<br>
+  <strong>E-Mail:</strong> ${email}<br>
+  <strong>Telefon:</strong> ${telefon}<br>
+  <strong>${detail}</strong><br>
+  <strong>Kundenanschrift:</strong><br>${kundenAdresse}
+  ${hasAbweichendeLieferadresse ? `<br><br><strong>Lieferanschrift:</strong><br>${lieferAdresse}` : ''}
+</p></div></div>`;
 }
 
 // Wandelt das im Browser erzeugte PDF-Blob in einen Base64-String um,
