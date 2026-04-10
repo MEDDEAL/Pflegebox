@@ -296,48 +296,67 @@ async function loadDashboard() {
   document.getElementById('profil-email').textContent = state.user.email;
 
   if (c) {
-    const setVal = (id, val) => { const el=document.getElementById(id); if(el && val) el.value=val; };
-    setVal('p-pflegegrad',  c.pflegegrad);
-    setVal('p-anrede',      c.anrede);
-    setVal('profil-vorname',c.vorname);
-    setVal('profil-nachname',c.nachname);
-    setVal('p-geburtsdatum',c.geburtsdatum);
-    setVal('p-strasse',     c.strasse);
-    setVal('p-hausnummer',  c.hausnummer);
-    setVal('p-plz',         c.plz);
-    setVal('p-stadt',       c.stadt);
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val ?? '';
+  };
 
-// FIX: Abweichende Adresse vollständig befüllen
-if (c.abw_adresse || c.abw_strasse || c.abw_hausnummer || c.abw_plz || c.abw_stadt) {
-  document.getElementById('p-abw-check').checked = true;
-  document.getElementById('p-abw-fields').style.display = 'block';
+  setVal('p-pflegegrad', c.pflegegrad);
+  setVal('p-anrede', c.anrede);
+  setVal('profil-vorname', c.vorname);
+  setVal('profil-nachname', c.nachname);
+  setVal('p-geburtsdatum', c.geburtsdatum);
+  setVal('p-strasse', c.strasse);
+  setVal('p-hausnummer', c.hausnummer);
+  setVal('p-plz', c.plz);
+  setVal('p-stadt', c.stadt);
 
-  const abw = c.abw_info || {};
+  if (c.abw_adresse || c.abw_strasse || c.abw_hausnummer || c.abw_plz || c.abw_stadt) {
+    document.getElementById('p-abw-check').checked = true;
+    document.getElementById('p-abw-fields').style.display = 'block';
 
-  setVal('p-abw-beziehung', abw.beziehung);
-  setVal('p-abw-anrede', abw.anrede);
-  setVal('p-abw-vorname', abw.vorname);
-  setVal('p-abw-nachname', abw.nachname);
+    const abw = c.abw_info || {};
 
-  setVal('p-abw-strasse', c.abw_strasse || '');
-  setVal('p-abw-hausnummer', c.abw_hausnummer || '');
-  setVal('p-abw-plz', c.abw_plz || '');
-  setVal('p-abw-stadt', c.abw_stadt || '');
-  setVal('p-abw-adresszusatz', c.abw_adresszusatz || '');
+    setVal('p-abw-beziehung', abw.beziehung);
+    setVal('p-abw-anrede', abw.anrede);
+    setVal('p-abw-vorname', abw.vorname);
+    setVal('p-abw-nachname', abw.nachname);
 
-  if (abw.betreuer) document.getElementById('p-abw-betreuer').checked = true;
-}
+    setVal('p-abw-strasse', c.abw_strasse);
+    setVal('p-abw-hausnummer', c.abw_hausnummer);
+    setVal('p-abw-plz', c.abw_plz);
+    setVal('p-abw-stadt', c.abw_stadt);
+    setVal('p-abw-adresszusatz', c.abw_adresszusatz);
 
-    setVal('p-versart',    c.versicherungsart);
-    setVal('p-versnr',     c.versicherungsnummer);
-    setVal('p-telefon',    c.telefon);
-    setVal('p-email-opt',  c.email_optional);
-    if (c.versorgungsart === 'Wechselversorgung') {
-      document.getElementById('p-wechselversorgung').checked = true;
-    } else {
-      document.getElementById('p-erstversorgung').checked = true;
-    }
+    document.getElementById('p-abw-betreuer').checked = !!abw.betreuer;
+  } else {
+    document.getElementById('p-abw-check').checked = false;
+    document.getElementById('p-abw-fields').style.display = 'none';
+
+    setVal('p-abw-beziehung', '');
+    setVal('p-abw-anrede', '');
+    setVal('p-abw-vorname', '');
+    setVal('p-abw-nachname', '');
+    setVal('p-abw-strasse', '');
+    setVal('p-abw-hausnummer', '');
+    setVal('p-abw-plz', '');
+    setVal('p-abw-stadt', '');
+    setVal('p-abw-adresszusatz', '');
+
+    document.getElementById('p-abw-betreuer').checked = false;
   }
+
+  setVal('p-versart', c.versicherungsart);
+  setVal('p-versnr', c.versicherungsnummer);
+  setVal('p-telefon', c.telefon);
+  setVal('p-email-opt', c.email_optional);
+
+  if (c.versorgungsart === 'Wechselversorgung') {
+    document.getElementById('p-wechselversorgung').checked = true;
+  } else {
+    document.getElementById('p-erstversorgung').checked = true;
+  }
+}
 
   const badge = document.getElementById('dash-abo-badge');
   const bar   = document.getElementById('dash-bar');
