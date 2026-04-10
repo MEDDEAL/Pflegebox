@@ -540,9 +540,28 @@ function goToSummary() {
     const name = [c.anrede, c.vorname, c.nachname].filter(Boolean).join(' ') || state.user?.email || '';
     const strasse = c.strasse && c.hausnummer ? `${c.strasse} ${c.hausnummer}` : (c.adresse || '');
     const ort = c.plz && c.stadt ? `${c.plz} ${c.stadt}` : '';
-    let html = `<strong>${name}</strong><br>${strasse}${ort ? '<br>'+ort : ''}`;
-    if (c.abw_adresse) html += `<br><span style="font-size:12px;color:var(--teal-600);">Abweichende Lieferadresse: ${c.abw_adresse}</span>`;
-    adressEl.innerHTML = html;
+    adressEl.innerHTML = '';
+
+const strong = document.createElement('strong');
+strong.textContent = name;
+adressEl.appendChild(strong);
+adressEl.appendChild(document.createElement('br'));
+
+adressEl.appendChild(document.createTextNode(strasse));
+
+if (ort) {
+  adressEl.appendChild(document.createElement('br'));
+  adressEl.appendChild(document.createTextNode(ort));
+}
+
+if (c.abw_adresse) {
+  adressEl.appendChild(document.createElement('br'));
+  const extra = document.createElement('span');
+  extra.style.fontSize = '12px';
+  extra.style.color = 'var(--teal-600)';
+  extra.textContent = `Abweichende Lieferadresse: ${c.abw_adresse}`;
+  adressEl.appendChild(extra);
+}
   } else {
     adressEl.innerHTML = '<span style="color:var(--red-400);font-size:13px;">⚠ Bitte zuerst Ihre Lieferadresse im Profil ergänzen.</span>';
   }
