@@ -21,11 +21,25 @@ function buildOrderEmailAdmin(box, c, month, aboActive) {
     [c?.anrede, c?.vorname, c?.nachname].filter(Boolean).join(' ') || 'Unbekannt'
   );
 
-  const adresse = escapeHtml(
-    c?.strasse
-      ? `${c.strasse} ${c.hausnummer}, ${c.plz} ${c.stadt}`
-      : (c?.adresse || '—')
-  );
+  const kundenAdresse = escapeHtml(
+  c?.strasse
+    ? `${c.strasse} ${c.hausnummer}, ${c.plz} ${c.stadt}`
+    : (c?.adresse || '—')
+);
+
+const lieferAdresseRaw =
+  c?.abw_adresse
+    ? c.abw_adresse
+    : (c?.abw_strasse || c?.abw_hausnummer || c?.abw_plz || c?.abw_stadt)
+      ? [
+          [c?.abw_strasse, c?.abw_hausnummer].filter(Boolean).join(' '),
+          [c?.abw_plz, c?.abw_stadt].filter(Boolean).join(' '),
+          c?.abw_adresszusatz
+        ].filter(Boolean).join(', ')
+      : '';
+
+const lieferAdresse = escapeHtml(lieferAdresseRaw || '—');
+const hasAbweichendeLieferadresse = !!lieferAdresseRaw;
 
   const email = escapeHtml(c?.email || '—');
   const safeMonth = escapeHtml(month || '—');
@@ -38,7 +52,10 @@ function buildOrderEmailAdmin(box, c, month, aboActive) {
     return `<tr><td style="padding:6px 12px;border-bottom:1px solid #f0f0f0">${produktName}${groesse}</td><td style="padding:6px 12px;border-bottom:1px solid #f0f0f0;text-align:right">× ${qty}</td></tr>`;
   }).join('');
 
-  return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Neue Bestellung — 24Pflegebox</h2></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p style="margin:0 0 16px;"><strong>Kunde:</strong> ${name}<br><strong>E-Mail:</strong> ${email}<br><strong>Monat:</strong> ${safeMonth}<br><strong>Bestelltyp:</strong> ${bestelltyp}</p><table style="width:100%;border-collapse:collapse;margin-bottom:16px;"><thead><tr style="background:#f5f5f5"><th style="padding:8px 12px;text-align:left">Produkt</th><th style="padding:8px 12px;text-align:right">Menge</th></tr></thead><tbody>${produkte}</tbody></table><p style="margin:0;"><strong>Lieferadresse:</strong><br>${adresse}</p></div></div>`;
+  return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Neue Bestellung — 24Pflegebox</h2></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p style="margin:0 0 16px;"><strong>Kunde:</strong> ${name}<br><strong>E-Mail:</strong> ${email}<br><strong>Monat:</strong> ${safeMonth}<br><strong>Bestelltyp:</strong> ${bestelltyp}</p><table style="width:100%;border-collapse:collapse;margin-bottom:16px;"><thead><tr style="background:#f5f5f5"><th style="padding:8px 12px;text-align:left">Produkt</th><th style="padding:8px 12px;text-align:right">Menge</th></tr></thead><tbody>${produkte}</tbody></table><p style="margin:0;">
+  <strong>Kundenanschrift:</strong><br>${kundenAdresse}
+  ${hasAbweichendeLieferadresse ? `<br><br><strong>Lieferanschrift:</strong><br>${lieferAdresse}` : ''}
+</p></div></div>`;
 }
 
 function buildOrderEmailKunde(box, c, month, aboActive) {
