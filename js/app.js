@@ -753,8 +753,8 @@ const abwAdresszusatz=document.getElementById('p-abw-adresszusatz')?.value.trim(
   fields.forEach(([,errId, val]) => { const el=document.getElementById(errId); if(el){el.classList.toggle('show',!val);if(!val) ok=false;} });
   if (!ok) return;
   if (abwCheck) {
-  if (!abwStrasse || !abwPlz || !abwStadt) {
-    showToast('Abweichende Lieferadresse unvollständig', 'Bitte Adresse, PLZ und Ort vollständig angeben.');
+  if (!abwStrasse || !abwHausnummer || !abwPlz || !abwStadt) {
+    showToast('Abweichende Lieferadresse unvollständig', 'Bitte Straße, Hausnummer, PLZ und Ort vollständig angeben.');
     return;
   }
 }
