@@ -44,6 +44,45 @@ async function blobToBase64(blob) {
   return btoa(binary);
 }
 
+// Hilfsfunktion: Wandelt das im Browser erzeugte PDF-Blob in Base64 um,
+// damit die Datei an die serverseitige Bestell-Mail-Route übergeben
+// und dort als Anhang an app@24pflegebox.de versendet werden kann.
+
+async function sendOrderEmailWithPdf({ box, customer, month, aboActive, pdfDoc }) {
+  const { data: { session } } = await sb.auth.getSession();
+
+  if (!session?.access_token) {
+    throw new Error('Keine gültige Sitzung vorhanden');
+  }
+
+  const pdfBlob = pdfDoc.output('blob');
+  const pdfBase64 = await blobToBase64(pdfBlob);
+  const pdfFilename = `Pflegebox_Antrag_${month.replace(/\s+/g, '_')}.pdf`;
+
+  const resp = await fetch('/api/send-order-email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`
+    },
+    body: JSON.stringify({
+      month,
+      box,
+      customer,
+      aboActive,
+      pdfBase64,
+      pdfFilename
+    })
+  });
+
+  if (!resp.ok) {
+    const errorText = await resp.text();
+    throw new Error(`Admin-Mail fehlgeschlagen: ${errorText}`);
+  }
+
+  return resp.json();
+}
+
 // ══════════════════════════════════════════════════
 // ORDER (FIX: Variable-Hoisting + Doppelklick-Schutz)
 // ══════════════════════════════════════════════════
