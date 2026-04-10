@@ -818,8 +818,30 @@ async function loadHistory() {
   if (!orders || !orders.length) { list.innerHTML='<p style="color:var(--gray-400);font-size:15px;text-align:center;padding:40px 0;">Noch keine Bestellungen vorhanden.</p>'; return; }
   orders.forEach(o => {
     const card = document.createElement('div'); card.className='card';
-    card.innerHTML=`<div class="status-row"><span style="font-weight:600;font-size:16px">${o.monat}</span><span class="badge badge-teal">${o.status}</span></div><div style="font-size:14px;color:var(--gray-600);padding-top:8px;line-height:1.7">${Array.isArray(o.produkte)?boxToString(o.produkte):'—'}</div>`;
-    list.appendChild(card);
+const statusRow = document.createElement('div');
+statusRow.className = 'status-row';
+
+const monthSpan = document.createElement('span');
+monthSpan.style.fontWeight = '600';
+monthSpan.style.fontSize = '16px';
+monthSpan.textContent = o.monat || '—';
+
+const badge = document.createElement('span');
+badge.className = 'badge badge-teal';
+badge.textContent = o.status || '—';
+
+statusRow.appendChild(monthSpan);
+statusRow.appendChild(badge);
+
+const details = document.createElement('div');
+details.style.fontSize = '14px';
+details.style.color = 'var(--gray-600)';
+details.style.paddingTop = '8px';
+details.style.lineHeight = '1.7';
+details.textContent = Array.isArray(o.produkte) ? boxToString(o.produkte) : '—';
+
+card.appendChild(statusRow);
+card.appendChild(details);    list.appendChild(card);
   });
 }
 
