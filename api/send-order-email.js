@@ -24,7 +24,23 @@ function buildAdminHtml({ customer, month, box, aboActive }) {
 
   const hasAbw = !!customer?.abw_adresse;
   const abw = customer?.abw_info || {};
-  const abwSplit = splitAddress(customer?.abw_adresse || '');
+  const deliveryName = escapeHtml(
+  hasAbw
+    ? [abw?.vorname, abw?.nachname].filter(Boolean).join(' ') || customer?.nachname || '—'
+    : [customer?.vorname, customer?.nachname].filter(Boolean).join(' ') || '—'
+);
+
+const deliveryStreet = escapeHtml(
+  hasAbw
+    ? [abw?.strasse || '', abw?.adresszusatz || ''].filter(Boolean).join(', ')
+    : `${customer?.strasse || ''} ${customer?.hausnummer || ''}`.trim()
+);
+
+const deliveryCity = escapeHtml(
+  hasAbw
+    ? [abw?.plz || '', abw?.stadt || ''].filter(Boolean).join(' ')
+    : `${customer?.plz || ''} ${customer?.stadt || ''}`.trim()
+);
 
   const deliveryName = escapeHtml(
     hasAbw
