@@ -314,9 +314,15 @@
             <div class="input-group"><label class="input-label">Anrede</label><select class="input-field" id="p-abw-anrede"><option value="">Bitte wählen</option><option value="Frau">Frau</option><option value="Herr">Herr</option><option value="Divers">Divers</option></select></div>
             <div class="input-group"><label class="input-label">Vorname</label><input class="input-field" type="text" id="p-abw-vorname" placeholder="Vorname der Lieferperson"></div>
             <div class="input-group"><label class="input-label">Nachname</label><input class="input-field" type="text" id="p-abw-nachname" placeholder="Nachname der Lieferperson"></div>
-            <div class="input-group" style="margin-bottom:0;"><label class="input-label">Vollständige Lieferadresse</label><div class="input-group">
-  <label class="input-label">Adresse</label>
-  <input class="input-field" type="text" id="p-abw-strasse" placeholder="Straße und Hausnummer">
+            <div class="profil-grid-2">
+  <div class="input-group">
+    <label class="input-label">Straße</label>
+    <input class="input-field" type="text" id="p-abw-strasse" placeholder="Musterstraße">
+  </div>
+  <div class="input-group">
+    <label class="input-label">Nr.</label>
+    <input class="input-field" type="text" id="p-abw-hausnummer" placeholder="1a" style="width:72px;">
+  </div>
 </div>
 
 <div class="profil-grid-plz">
@@ -325,7 +331,7 @@
     <input class="input-field" type="text" id="p-abw-plz" placeholder="20095" maxlength="5" style="width:90px;">
   </div>
   <div class="input-group">
-    <label class="input-label">Ort</label>
+    <label class="input-label">Stadt</label>
     <input class="input-field" type="text" id="p-abw-stadt" placeholder="Hamburg">
   </div>
 </div>
@@ -333,7 +339,7 @@
 <div class="input-group" style="margin-bottom:0;">
   <label class="input-label">Adresszusatz</label>
   <input class="input-field" type="text" id="p-abw-adresszusatz" placeholder="z. B. c/o, Etage, Klingelname">
-</div></div>
+</div>
           </div>
         </div>
         <button class="btn-primary" id="profil-save-btn" onclick="saveProfilData()">Lieferdaten speichern</button>
