@@ -744,6 +744,10 @@ async function saveProfilData() {
   const abwVorname=document.getElementById('p-abw-vorname')?.value.trim()||'';
   const abwNachname=document.getElementById('p-abw-nachname')?.value.trim()||'';
   const abwStrasse=document.getElementById('p-abw-strasse')?.value.trim()||'';
+  const abwHausnummer=document.getElementById('p-abw-hausnummer')?.value.trim()||'';
+  const abwPlz=document.getElementById('p-abw-plz')?.value.trim()||'';
+  const abwStadt=document.getElementById('p-abw-stadt')?.value.trim()||'';
+  const abwZusatz=document.getElementById('p-abw-zusatz')?.value.trim()||'';
   const abwPlz=document.getElementById('p-abw-plz')?.value.trim()||'';
   const abwStadt=document.getElementById('p-abw-stadt')?.value.trim()||'';
   const abwAdresszusatz=document.getElementById('p-abw-adresszusatz')?.value.trim()||'';
@@ -790,14 +794,31 @@ const abwInfoObj = abwCheck
   const { error } = await sb.from('customers').upsert({
     id:state.user.id, pflegegrad, anrede, vorname, nachname, name:fullName,
     geburtsdatum, strasse, hausnummer, plz, stadt, adresse,
-    abw_adresse:abwAdresse, abw_info:abwInfoObj, abo_aktiv:state.aboActive
+    abw_adresse:abwAdresse,
+    abw_strasse:abwCheck ? abwStrasse : null,
+abw_hausnummer:abwCheck ? abwHausnummer : null,
+abw_plz:abwCheck ? abwPlz : null,
+abw_stadt:abwCheck ? abwStadt : null,
+abw_zusatz:abwCheck ? abwZusatz : null,
+abw_info:abwInfoObj,
+abo_aktiv:state.aboActive
   });
 
   btn.disabled = false; btn.textContent = 'Lieferdaten speichern';
   if (error) { showToast('Fehler', 'Fehler beim Speichern: ' + error.message); return; }
 
   if (!state.customer) state.customer = {};
-  Object.assign(state.customer, {pflegegrad,anrede,vorname,nachname,name:fullName,geburtsdatum,strasse,hausnummer,plz,stadt,adresse,abw_adresse:abwAdresse,abw_info:abwInfoObj});
+  Object.assign(state.customer, {
+  pflegegrad, anrede, vorname, nachname, name:fullName,
+  geburtsdatum, strasse, hausnummer, plz, stadt, adresse,
+  abw_adresse: abwAdresse,
+  abw_strasse: abwCheck ? abwStrasse : null,
+  abw_hausnummer: abwCheck ? abwHausnummer : null,
+  abw_plz: abwCheck ? abwPlz : null,
+  abw_stadt: abwCheck ? abwStadt : null,
+  abw_zusatz: abwCheck ? abwZusatz : null,
+  abw_info: abwInfoObj
+});
 
   document.getElementById('profil-save-success').style.display = 'block';
   setTimeout(() => { document.getElementById('profil-save-success').style.display = 'none'; }, 3000);
