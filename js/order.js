@@ -137,12 +137,22 @@ async function doOrder() {
 
   await sb.from('customers').update({ abo_aktiv: state.aboActive, abo_box: box }).eq('id', state.user.id);
 
-  const adminHtml = buildOrderEmailAdmin(box, c, month, state.aboActive);
-  const kundeHtml = buildOrderEmailKunde(box, c, month, state.aboActive);
-  await Promise.all([
-    sendEmail(ADMIN_EMAIL, `Neue Bestellung — ${c?.vorname||'Kunde'} — ${month}`, adminHtml),
-    sendEmail(state.user.email, `Ihre Pflegebox für ${month} — Bestellung eingegangen`, kundeHtml)
-  ]);
+   // Reifenfolge von doOrder() Korrektur
+   
+  await sendOrderEmailWithPdf({
+  box,
+  customer: c,
+  month,
+  aboActive: state.aboActive,
+  pdfDoc
+});
+
+const kundeHtml = buildOrderEmailKunde(box, c, month, state.aboActive);
+await sendEmail(
+  state.user.email,
+  `Ihre Pflegebox für ${month} — Bestellung eingegangen`,
+  kundeHtml
+);
 
   if (pdfDoc) {
     try {
