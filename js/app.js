@@ -316,7 +316,10 @@ async function loadDashboard() {
       setVal('p-abw-anrede', abw.anrede);
       setVal('p-abw-vorname', abw.vorname);
       setVal('p-abw-nachname', abw.nachname);
-      setVal('p-abw-adresse-voll', c.abw_adresse);
+      setVal('p-abw-strasse', abw.strasse);
+      setVal('p-abw-plz', abw.plz);
+      setVal('p-abw-stadt', abw.stadt);
+      setVal('p-abw-adresszusatz', abw.adresszusatz);
       if (abw.betreuer) document.getElementById('p-abw-betreuer').checked = true;
     }
 
@@ -735,20 +738,49 @@ async function saveProfilData() {
   const abwAnrede=document.getElementById('p-abw-anrede')?.value||'';
   const abwVorname=document.getElementById('p-abw-vorname')?.value.trim()||'';
   const abwNachname=document.getElementById('p-abw-nachname')?.value.trim()||'';
-  const abwAdresseVoll=document.getElementById('p-abw-adresse-voll')?.value.trim()||'';
+  const abwStrasse=document.getElementById('p-abw-strasse')?.value.trim()||'';
+  const abwPlz=document.getElementById('p-abw-plz')?.value.trim()||'';
+  const abwStadt=document.getElementById('p-abw-stadt')?.value.trim()||'';
+  const abwAdresszusatz=document.getElementById('p-abw-adresszusatz')?.value.trim()||'';
 
   const fields=[['p-pflegegrad','err-pflegegrad',pflegegrad],['p-anrede','err-anrede',anrede],['profil-vorname','err-vorname',vorname],['profil-nachname','err-nachname',nachname],['p-geburtsdatum','err-geburtsdatum',geburtsdatum],['p-strasse','err-strasse',strasse],['p-hausnummer','err-hausnummer',hausnummer],['p-plz','err-plz',plz],['p-stadt','err-stadt',stadt]];
   let ok = true;
   fields.forEach(([,errId, val]) => { const el=document.getElementById(errId); if(el){el.classList.toggle('show',!val);if(!val) ok=false;} });
   if (!ok) return;
+  if (abwCheck) {
+  if (!abwStrasse || !abwPlz || !abwStadt) {
+    showToast('Abweichende Lieferadresse unvollständig', 'Bitte Adresse, PLZ und Ort vollständig angeben.');
+    return;
+  }
+}
+  
 
   const btn = document.getElementById('profil-save-btn');
   btn.disabled = true; btn.textContent = 'Wird gespeichert...';
 
   const fullName = anrede + ' ' + vorname + ' ' + nachname;
   const adresse = strasse + ' ' + hausnummer + ', ' + plz + ' ' + stadt;
-  const abwAdresse = abwCheck ? abwAdresseVoll : null;
-  const abwInfoObj = abwCheck ? {beziehung:abwBeziehung,betreuer:abwBetreuer,anrede:abwAnrede,vorname:abwVorname,nachname:abwNachname} : null;
+  const abwAdresse = abwCheck
+  ? [
+      abwStrasse,
+      [abwPlz, abwStadt].filter(Boolean).join(' '),
+      abwAdresszusatz
+    ].filter(Boolean).join(', ')
+  : null;
+
+const abwInfoObj = abwCheck
+  ? {
+      beziehung: abwBeziehung,
+      betreuer: abwBetreuer,
+      anrede: abwAnrede,
+      vorname: abwVorname,
+      nachname: abwNachname,
+      strasse: abwStrasse,
+      plz: abwPlz,
+      stadt: abwStadt,
+      adresszusatz: abwAdresszusatz
+    }
+  : null;
 
   const { error } = await sb.from('customers').upsert({
     id:state.user.id, pflegegrad, anrede, vorname, nachname, name:fullName,
