@@ -18,6 +18,17 @@ sb.auth.onAuthStateChange((event) => {
   }
 });
 
+// ESCAPE HTML
+
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ── CONSTANTS ──────────────────────────────────
 const BUDGET = 42;
 const MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
@@ -788,7 +799,7 @@ async function dashBeantragen(type) {
       state.bettschutzAktiv = true; if (state.bettschutzAnzahl === 0) state.bettschutzAnzahl = 1;
       showToast('Bettschutzeinlagen beantragt', 'Wir haben Ihre Anfrage erhalten.');
     } else {
-      if (sub) sub.textContent = 'Beantragt – Vitalset GmbH meldet sich';
+      if (sub) sub.textContent = 'Beantragt – wir melden uns bei Ihnen';
       state.hausnotrufAktiv = true;
       showToast('Hausnotrufsystem beantragt', 'Unser Partner Vitalset GmbH wird sich melden.');
     }
@@ -799,15 +810,21 @@ async function dashBeantragen(type) {
       if (error) { showToast('Fehler','Anfrage konnte nicht gespeichert werden.'); return; }
 
       const extraHtml = buildExtraEmail(type, state.customer, state.bettschutzAnzahl);
-      const titel = type==='bett'?'Bettschutzeinlagen':'Hausnotrufsystem';
-      const vorname = state.customer?.vorname||'Kunde';
-      await sendEmail(ADMIN_EMAIL, `Neuer Antrag: ${titel} — ${vorname}`, extraHtml);
+      const titel = type === 'bett' ? 'Bettschutzeinlagen' : 'Hausnotrufsystem';
+      const vorname = escapeHtml(state.customer?.vorname || 'Kunde');
+      await sendEmail(ADMIN_EMAIL, `Neuer Antrag: ${titel} — ${state.customer?.vorname || 'Kunde'}`, extraHtml);
 
-      const kundeMsg = type==='bett'
-        ? `Wir haben Ihren Antrag auf waschbare Bettschutzeinlagen (${state.bettschutzAnzahl} Stück) erhalten.`
-        : 'Wir haben Ihren Antrag auf ein Hausnotrufsystem erhalten. Vitalset GmbH wird sich melden.';
-      const kundeHtml = `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Antrag eingegangen!</h2></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p>Guten Tag, ${vorname},</p><p>${kundeMsg}</p><p style="color:#888;font-size:13px;margin-top:24px;">Bei Fragen: <a href="mailto:${ADMIN_EMAIL}" style="color:#1D9E75">${ADMIN_EMAIL}</a></p></div></div>`;
-      await sendEmail(state.user.email, `Ihr Antrag: ${titel} — eingegangen`, kundeHtml);
+      const kundeMsg = escapeHtml(
+      type === 'bett'
+       ? `Wir haben Ihren Antrag auf waschbare Bettschutzeinlagen (${state.bettschutzAnzahl} Stück) erhalten.`
+       : 'Wir haben Ihren Antrag auf ein Hausnotrufsystem erhalten. Vitalset GmbH wird sich melden.'
+   );
+
+const safeAdminEmail = escapeHtml(ADMIN_EMAIL);
+
+const kundeHtml = `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0F6E56;padding:20px 24px;border-radius:8px 8px 0 0;"><h2 style="color:#fff;margin:0;font-size:18px;">Antrag eingegangen!</h2></div><div style="background:#fff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;"><p>Guten Tag, ${vorname},</p><p>${kundeMsg}</p><p style="color:#888;font-size:13px;margin-top:24px;">Bei Fragen: <a href="mailto:${safeAdminEmail}" style="color:#1D9E75">${safeAdminEmail}</a></p></div></div>`;
+
+await sendEmail(state.user.email, `Ihr Antrag: ${titel} — eingegangen`, kundeHtml);
     }
   } else {
     if (tile) { tile.style.borderColor=''; tile.style.background=''; tile.dataset.done='0'; }
